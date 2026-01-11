@@ -89,21 +89,6 @@ function showMessage(message, type = 'info') {
     container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// Helper to filter past slots
-function isPastSlot(date, slot) {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    if (date < today) return true;
-    if (date > today) return false;
-
-    const [h, m] = slot.split('-')[0].split(':').map(Number);
-    const slotMinutes = h * 60 + m;
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-    return nowMinutes >= slotMinutes;
-}
-
 // Load settings and display resource types dynamically
 async function loadSettings() {
     const token = getToken();
@@ -224,6 +209,22 @@ document.getElementById('resourceSelect').addEventListener('change', function() 
 document.getElementById('bookingDate').addEventListener('change', function() {
     loadAvailableSlots();
 });
+
+// HELPER to filter past slots
+function isPastSlot(date, slot) {
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    if (date > today) return false;
+    if (date < today) return true;
+
+    const slotStart = slot.split('-')[0]; // "HH:MM"
+    const [hour, minute] = slotStart.split(':').map(Number);
+    const slotMinutes = hour * 60 + minute;
+    const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+    return nowMinutes >= slotMinutes; // true if past
+}
 
 async function loadAvailableSlots() {
     const resourceId = document.getElementById('resourceSelect').value;
