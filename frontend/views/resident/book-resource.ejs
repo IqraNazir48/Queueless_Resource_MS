@@ -14,7 +14,6 @@
             <div class="card">
                 <div class="card-body p-4">
                     <form id="bookingForm">
-                        <!-- Step 1: Resource Type -->
                         <div class="mb-4">
                             <label class="form-label">Step 1: Select Resource Type</label>
                             <div id="resourceTypesContainer" class="row g-3">
@@ -25,22 +24,19 @@
                             </div>
                         </div>
 
-                        <!-- Step 2: Resource Select -->
                         <div class="mb-4" id="resourceSelectContainer" style="display: none;">
-                            <label for="resourceSelect" class="form-label">Step 2: Select Specific Resource</label>
+                            <label for="resourceSelect" class="form-label">Step 2: Select Resource</label>
                             <select class="form-select" id="resourceSelect" required>
                                 <option value="">Choose a resource...</option>
                             </select>
                             <div id="resourceInfo" class="mt-2"></div>
                         </div>
 
-                        <!-- Step 3: Date -->
                         <div class="mb-4" id="dateContainer" style="display: none;">
                             <label for="bookingDate" class="form-label">Step 3: Select Date</label>
                             <input type="date" class="form-control" id="bookingDate" required>
                         </div>
 
-                        <!-- Step 4: Slots -->
                         <div class="mb-4" id="slotsContainer" style="display: none;">
                             <label class="form-label">Step 4: Select Time Slot</label>
                             <div id="loadingSlots" class="text-center py-3">
@@ -49,7 +45,7 @@
                             </div>
                             <div id="slotsGrid" class="slot-grid" style="display: none;"></div>
                             <div id="noSlots" class="alert alert-warning" style="display: none;">
-                                No available slots for this date. Please select another date.
+                                No available slots for this date.
                             </div>
                         </div>
 
@@ -68,191 +64,106 @@
 
 <script>
 let selectedSlot = null;
-let selectedResourceType = null;
 let allSettings = null;
 
-function getToken() {
-    return localStorage.getItem('token');
-}
-
-function showMessage(message, type = 'info') {
+function getToken() { return localStorage.getItem('token'); }
+function showMessage(msg, type='info') { 
     const container = document.getElementById('messageContainer');
-    container.innerHTML = `
-        <div class="alert alert-${type} alert-dismissible fade show">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    container.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show">${msg}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
 }
 
-// Load settings
 async function loadSettings() {
-    const token = getToken();
     try {
-        const response = await fetch('/api/settings', { headers: { 'Authorization': `Bearer ${token}` } });
-        if (response.ok) {
-            allSettings = await response.json();
-            displayResourceTypes();
-        } else showMessage('Error loading settings', 'danger');
-    } catch (error) {
-        console.error(error);
-        showMessage('Error loading settings', 'danger');
-    }
+        const res = await fetch('/api/settings', { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        allSettings = await res.json();
+        displayResourceTypes();
+    } catch(e){ showMessage('Error loading settings', 'danger'); }
 }
 
 function displayResourceTypes() {
     const container = document.getElementById('resourceTypesContainer');
     container.innerHTML = '';
-    if (!allSettings?.resourceTypes?.length) {
-        container.innerHTML = `<div class="col-12"><div class="alert alert-warning">No resource types available.</div></div>`;
-        return;
-    }
-
     allSettings.resourceTypes.forEach(rt => {
         const col = document.createElement('div');
         col.className = 'col-md-4';
-        col.innerHTML = `
-            <input type="radio" class="btn-check" name="resourceType" id="${rt.value}" value="${rt.value}">
+        col.innerHTML = `<input type="radio" class="btn-check" name="resourceType" id="${rt.value}" value="${rt.value}">
             <label class="btn btn-outline-primary w-100 h-100 p-3" for="${rt.value}">
-                <i class="bi bi-${rt.icon} d-block fs-2 mb-2"></i>${rt.label}
-            </label>
-        `;
+                <i class="bi bi-${rt.icon} d-block fs-2 mb-2"></i>${rt.label}</label>`;
         container.appendChild(col);
     });
 
     document.querySelectorAll('input[name="resourceType"]').forEach(radio => {
-        radio.addEventListener('change', () => {
-            selectedResourceType = radio.value;
-            loadResourcesOfType(radio.value);
-        });
+        radio.addEventListener('change', () => loadResourcesOfType(radio.value));
     });
 }
 
 async function loadResourcesOfType(type) {
-    const token = getToken();
     try {
-        const res = await fetch(`/api/resources?type=${type}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const resources = (await res.json()).filter(r => r.status === 'available');
-
+        const res = await fetch(`/api/resources?type=${type}`, { headers: { 'Authorization': `Bearer ${getToken()}` } });
+        const resources = (await res.json()).filter(r => r.status==='available');
         const select = document.getElementById('resourceSelect');
         select.innerHTML = '<option value="">Choose a resource...</option>';
         resources.forEach(r => {
             const opt = document.createElement('option');
-            opt.value = r._id;
-            opt.textContent = `${r.name} - ${r.location}`;
-            opt.dataset.resource = JSON.stringify(r);
+            opt.value = r._id; opt.textContent = `${r.name} - ${r.location}`; opt.dataset.resource = JSON.stringify(r);
             select.appendChild(opt);
         });
-
-        document.getElementById('resourceSelectContainer').style.display = 'block';
-        document.getElementById('dateContainer').style.display = 'none';
-        document.getElementById('slotsContainer').style.display = 'none';
-        document.getElementById('submitContainer').style.display = 'none';
-    } catch (error) {
-        console.error(error);
-        showMessage('Error loading resources', 'danger');
-    }
+        document.getElementById('resourceSelectContainer').style.display='block';
+    } catch(e){ showMessage('Error loading resources','danger'); }
 }
 
-document.getElementById('resourceSelect').addEventListener('change', function() {
-    if (!this.value) return document.getElementById('dateContainer').style.display = 'none';
-    
+document.getElementById('resourceSelect').addEventListener('change', function(){
+    if(!this.value) return;
     const resource = JSON.parse(this.options[this.selectedIndex].dataset.resource);
-    document.getElementById('resourceInfo').innerHTML = `<div class="alert alert-info"><strong>${resource.name}</strong> | ${resource.location}</div>`;
-
+    document.getElementById('resourceInfo').innerHTML=`<div class="alert alert-info"><strong>${resource.name}</strong> | ${resource.location}</div>`;
     const today = new Date().toISOString().split('T')[0];
     const bookingDate = document.getElementById('bookingDate');
-    bookingDate.min = today;
-    bookingDate.value = today;
-    document.getElementById('dateContainer').style.display = 'block';
+    bookingDate.min = today; bookingDate.value = today;
+    document.getElementById('dateContainer').style.display='block';
     loadAvailableSlots();
 });
 
 document.getElementById('bookingDate').addEventListener('change', loadAvailableSlots);
 
-async function loadAvailableSlots() {
+async function loadAvailableSlots(){
     const resourceId = document.getElementById('resourceSelect').value;
     const date = document.getElementById('bookingDate').value;
-    if (!resourceId || !date) return;
+    if(!resourceId||!date) return;
 
     const container = document.getElementById('slotsContainer');
     const grid = document.getElementById('slotsGrid');
     const loading = document.getElementById('loadingSlots');
     const noSlots = document.getElementById('noSlots');
+    container.style.display='block'; loading.style.display='block'; grid.style.display='none'; noSlots.style.display='none'; selectedSlot=null;
 
-    container.style.display = 'block';
-    loading.style.display = 'block';
-    grid.style.display = 'none';
-    noSlots.style.display = 'none';
-    document.getElementById('submitContainer').style.display = 'none';
-    selectedSlot = null;
-
-    try {
-        const token = getToken();
-        const res = await fetch(`/api/resources/${resourceId}/available-slots?date=${date}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        const data = await res.json();
-        loading.style.display = 'none';
-
-        if (data.availableSlots?.length) {
-            grid.style.display = 'grid';
-            grid.innerHTML = '';
-            data.availableSlots.forEach(slot => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'slot-btn';
-                btn.textContent = slot;
-                btn.dataset.slot = slot;
-                btn.addEventListener('click', () => {
-                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-                    btn.classList.add('selected');
-                    selectedSlot = slot;
-                    document.getElementById('submitContainer').style.display = 'block';
+    try{
+        const res = await fetch(`/api/resources/${resourceId}/available-slots?date=${date}`, { headers:{ 'Authorization':`Bearer ${getToken()}` }});
+        const data = await res.json(); loading.style.display='none';
+        if(data.availableSlots?.length){
+            grid.style.display='grid'; grid.innerHTML='';
+            data.availableSlots.forEach(slot=>{
+                const btn=document.createElement('button'); btn.type='button'; btn.className='slot-btn'; btn.textContent=slot;
+                btn.addEventListener('click',()=>{
+                    document.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+                    btn.classList.add('selected'); selectedSlot=slot;
+                    document.getElementById('submitContainer').style.display='block';
                 });
                 grid.appendChild(btn);
             });
-        } else noSlots.style.display = 'block';
-    } catch (error) {
-        console.error(error);
-        loading.style.display = 'none';
-        showMessage('Error loading slots', 'danger');
-    }
+        } else noSlots.style.display='block';
+    } catch(e){ console.error(e); loading.style.display='none'; showMessage('Error loading slots','danger'); }
 }
 
-document.getElementById('bookingForm').addEventListener('submit', async e => {
+document.getElementById('bookingForm').addEventListener('submit', async e=>{
     e.preventDefault();
-    if (!selectedSlot) return showMessage('Select a time slot', 'warning');
-
-    const submitBtn = document.getElementById('submitBtn');
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
-
-    const resourceId = document.getElementById('resourceSelect').value;
-    const date = document.getElementById('bookingDate').value;
-
-    try {
-        const token = getToken();
-        const res = await fetch('/api/bookings/slot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ resourceId, date, slot: selectedSlot })
-        });
-
-        const data = await res.json();
-        if (res.ok) {
-            showMessage('Booking successful! Redirecting...', 'success');
-            setTimeout(() => window.location.href = '/my-bookings', 2000);
-        } else {
-            showMessage(data.message || 'Booking failed', 'danger');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
-        }
-    } catch (error) {
-        console.error(error);
-        showMessage('Network error', 'danger');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Confirm Booking';
-    }
+    if(!selectedSlot) return showMessage('Select a time slot','warning');
+    const submitBtn=document.getElementById('submitBtn'); submitBtn.disabled=true; submitBtn.innerHTML='<span class="spinner-border spinner-border-sm me-2"></span>Booking...';
+    try{
+        const res=await fetch('/api/bookings/slot',{ method:'POST', headers:{ 'Content-Type':'application/json','Authorization':`Bearer ${getToken()}` }, body:JSON.stringify({ resourceId: document.getElementById('resourceSelect').value, date: document.getElementById('bookingDate').value, slot:selectedSlot })});
+        const data=await res.json();
+        if(res.ok){ showMessage('Booking successful! Redirecting...','success'); setTimeout(()=>window.location.href='/my-bookings',2000);}
+        else { showMessage(data.message||'Booking failed','danger'); submitBtn.disabled=false; submitBtn.innerHTML='<i class="bi bi-check-circle"></i> Confirm Booking'; }
+    } catch(e){ console.error(e); showMessage('Network error','danger'); submitBtn.disabled=false; submitBtn.innerHTML='<i class="bi bi-check-circle"></i> Confirm Booking'; }
 });
 
 loadSettings();
