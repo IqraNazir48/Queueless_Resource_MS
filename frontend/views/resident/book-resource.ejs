@@ -231,12 +231,31 @@ async function loadAvailableSlots() {
     
     const token = getToken();
     
+    // Get user's timezone offset in minutes
+    const timezoneOffset = new Date().getTimezoneOffset();
+    
+    console.log('==========================================');
+    console.log('CLIENT TIMEZONE INFO:');
+    console.log('Timezone offset (minutes):', timezoneOffset);
+    console.log('Client local time:', new Date().toString());
+    console.log('Client ISO time:', new Date().toISOString());
+    console.log('Requesting slots for date:', date);
+    console.log('==========================================');
+    
     try {
-        const response = await fetch(`/api/resources/${resourceId}/available-slots?date=${date}`, {
+        const response = await fetch(`/api/resources/${resourceId}/available-slots?date=${date}&timezone=${timezoneOffset}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         const data = await response.json();
+        
+        console.log('==========================================');
+        console.log('SERVER RESPONSE:');
+        console.log('Server time:', data.serverTime);
+        console.log('User local time (calculated by server):', data.userLocalTime);
+        console.log('Is today?:', data.isToday);
+        console.log('Available slots:', data.availableSlots);
+        console.log('==========================================');
         
         loadingSlots.style.display = 'none';
         
