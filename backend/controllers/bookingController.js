@@ -5,14 +5,6 @@ const { getTimeSlotsForType } = require("../utils/slots");
 
 const isValidDateString = (s) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 
-// Get today's date in local timezone as YYYY-MM-DD
-const getTodayString = () => {
-    const now = new Date();
-    const offset = now.getTimezoneOffset(); // minutes
-    const localNow = new Date(now.getTime() - offset * 60 * 1000);
-    return localNow.toISOString().split('T')[0];
-};
-
 const getWeekStart = (dateString) => {
     const date = new Date(dateString + 'T00:00:00');
     const day = date.getDay();
@@ -28,51 +20,67 @@ const getWeekEnd = (dateString) => {
     return weekEnd.toISOString().split('T')[0];
 };
 
-// Check if booking date & slot is in the past
 const isPastBooking = (date, slot) => {
-    const todayStr = getTodayString();
+    const now = new Date();
+    const localOffset = now.getTimezoneOffset() * 60 * 1000;
+    const localNow = new Date(now.getTime() - localOffset);
+    const todayStr = localNow.toISOString().split('T')[0];
 
     if (date < todayStr) return true;
     if (date > todayStr) return false;
 
-    // same day -> check slot time
-    const now = new Date();
-    const slotStart = slot.split('-')[0];
-    const [hour, minute] = slotStart.split(':').map(Number);
-    const slotMinutes = hour * 60 + minute;
-    const localMinutes = now.getHours() * 60 + now.getMinutes();
+    const [startHour, startMinute] = slot.split('-')[0].split(':').map(Number);
+    const slotMinutes = startHour * 60 + startMinute;
+    const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
 
-    return localMinutes >= slotMinutes;
+    return currentMinutes >= slotMinutes;
 };
 
-// Book a slot
+exports.getAvailableSlots = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { date } = req.query;
+
+        const resource = await Resource.findById(id);
+        if (!resource) return res.status(404).json({ message: "Resource not found" });
+
+        let allSlots = await getTimeSlotsForType(resource.type);
+
+        const now = new Date();
+        const localOffset = now.getTimezoneOffset() * 60 * 1000;
+        const localNow = new Date(now.getTime() - localOffset);
+        const todayStr = localNow.toISOString().split('T')[0];
+
+        if (date === todayStr) {
+            const currentMinutes = localNow.getHours() * 60 + localNow.getMinutes();
+            allSlots = allSlots.filter(slot => {
+                const [hour, minute] = slot.split('-')[0].split(':').map(Number);
+                return hour * 60 + minute > currentMinutes;
+            });
+        }
+
+        res.json({ availableSlots: allSlots });
+    } catch (error) {
+        console.error("Error fetching slots:", error);
+        res.status(500).json({ message: "Error fetching slots", error: error.message });
+    }
+};
+
 exports.bookSlot = async (req, res) => {
     try {
         const { resourceId, date, slot } = req.body;
-
-        if (!resourceId || !date || !slot) {
-            return res.status(400).json({ message: "resourceId, date and slot are required" });
-        }
-
-        if (!isValidDateString(date)) {
-            return res.status(400).json({ message: "date must be in YYYY-MM-DD format" });
-        }
+        if (!resourceId || !date || !slot) return res.status(400).json({ message: "resourceId, date and slot are required" });
+        if (!isValidDateString(date)) return res.status(400).json({ message: "date must be in YYYY-MM-DD format" });
 
         const resource = await Resource.findById(resourceId);
         if (!resource) return res.status(404).json({ message: "Resource not found" });
 
         const validSlots = await getTimeSlotsForType(resource.type);
-        if (!validSlots.includes(slot)) {
-            return res.status(400).json({ 
-                message: "Invalid slot for this resource type. Please select an available slot." 
-            });
-        }
+        if (!validSlots.includes(slot)) return res.status(400).json({ message: "Invalid slot for this resource type" });
 
-        if (isPastBooking(date, slot)) {
-            return res.status(400).json({ message: "Cannot book past slots" });
-        }
+        if (isPastBooking(date, slot)) return res.status(400).json({ message: "Cannot book slots in the past" });
 
-        const todayStr = getTodayString();
+        const todayStr = new Date(new Date().getTime() - new Date().getTimezoneOffset()*60000).toISOString().split('T')[0];
         const isEarlyBooking = date > todayStr;
 
         const resourcesOfSameType = await Resource.find({ type: resource.type }).select('_id');
@@ -85,65 +93,26 @@ exports.bookSlot = async (req, res) => {
                 date: { $gt: todayStr },
                 status: "active"
             });
-
-            if (totalEarlyBookings >= 1) {
-                return res.status(400).json({ 
-                    message: `You already have 1 advance ${resource.type} booking.` 
-                });
-            }
+            if (totalEarlyBookings >= 1) return res.status(400).json({ message: `You can only make 1 early booking per resource type` });
         }
 
-        const slotConflict = await Booking.findOne({
-            userId: req.user.id,
-            date,
-            slot,
-            status: "active"
-        });
+        const slotConflict = await Booking.findOne({ userId: req.user.id, date, slot, status: "active" });
+        if (slotConflict) return res.status(400).json({ message: "You already have a booking in this slot" });
 
-        if (slotConflict) {
-            return res.status(400).json({ 
-                message: "You already have a booking in this time slot." 
-            });
-        }
-
-        const dailyBookingsForType = await Booking.countDocuments({
-            userId: req.user.id,
-            resourceId: { $in: resourceIdsOfType },
-            date,
-            status: "active"
-        });
-
-        if (dailyBookingsForType >= 2) {
-            return res.status(400).json({ 
-                message: `Maximum 2 ${resource.type} bookings per day allowed.` 
-            });
+        if (date >= todayStr) {
+            const dailyBookingsForType = await Booking.countDocuments({ userId: req.user.id, resourceId: { $in: resourceIdsOfType }, date, status: "active" });
+            if (dailyBookingsForType >= 2) return res.status(400).json({ message: "Maximum 2 bookings per day per resource type allowed" });
         }
 
         const weekStart = getWeekStart(date);
         const weekEnd = getWeekEnd(date);
+        const weeklyBookingsForType = await Booking.countDocuments({ userId: req.user.id, resourceId: { $in: resourceIdsOfType }, date: { $gte: weekStart, $lte: weekEnd }, status: "active" });
+        if (weeklyBookingsForType >= 4) return res.status(400).json({ message: "Maximum 4 bookings per week per resource type allowed" });
 
-        const weeklyBookingsForType = await Booking.countDocuments({
-            userId: req.user.id,
-            resourceId: { $in: resourceIdsOfType },
-            date: { $gte: weekStart, $lte: weekEnd },
-            status: "active"
-        });
+        const booking = new Booking({ userId: req.user.id, resourceId, date, slot, status: "active" });
+        try { await booking.save(); } 
+        catch (err) { if (err.code === 11000) return res.status(409).json({ message: "This slot is already booked" }); throw err; }
 
-        if (weeklyBookingsForType >= 4) {
-            return res.status(400).json({ 
-                message: `Maximum 4 ${resource.type} bookings per week allowed.` 
-            });
-        }
-
-        const booking = new Booking({
-            userId: req.user.id,
-            resourceId,
-            date,
-            slot,
-            status: "active"
-        });
-
-        await booking.save();
         res.status(201).json({ message: "Slot booked successfully", booking });
 
     } catch (error) {
@@ -152,14 +121,13 @@ exports.bookSlot = async (req, res) => {
     }
 };
 
-// Cancel booking (same with past check)
 exports.cancelBooking = async (req, res) => {
     try {
         const booking = await Booking.findById(req.params.id);
         if (!booking) return res.status(404).json({ message: "Booking not found" });
         if (booking.userId.toString() !== req.user.id) return res.status(403).json({ message: "Not allowed" });
         if (isPastBooking(booking.date, booking.slot)) return res.status(400).json({ message: "Cannot cancel past bookings" });
-        if (booking.status === "cancelled") return res.status(400).json({ message: "Booking already cancelled" });
+        if (booking.status === "cancelled") return res.status(400).json({ message: "Booking is already cancelled" });
 
         booking.status = "cancelled";
         await booking.save();
@@ -169,34 +137,10 @@ exports.cancelBooking = async (req, res) => {
     }
 };
 
-// Admin cancel
-exports.adminCancelBooking = async (req, res) => {
-    try {
-        const booking = await Booking.findById(req.params.id);
-        if (!booking) return res.status(404).json({ message: "Booking not found" });
-        if (isPastBooking(booking.date, booking.slot)) return res.status(400).json({ message: "Cannot cancel past bookings" });
-        if (booking.status === "cancelled") return res.status(400).json({ message: "Booking already cancelled" });
-
-        booking.status = "cancelled";
-        await booking.save();
-        res.json({ message: "Booking cancelled by admin", booking });
-    } catch (error) {
-        res.status(500).json({ message: "Error", error: error.message });
-    }
-};
-
-// Get bookings
 exports.getUserBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find({ userId: req.user.id })
-            .populate('resourceId', 'name type location')
-            .sort({ date: -1, createdAt: -1 });
-        
-        const bookingsWithStatus = bookings.map(b => {
-            const obj = b.toObject();
-            obj.isPast = isPastBooking(b.date, b.slot);
-            return obj;
-        });
+        const bookings = await Booking.find({ userId: req.user.id }).populate('resourceId', 'name type location').sort({ date: -1, createdAt: -1 });
+        const bookingsWithStatus = bookings.map(b => { const obj = b.toObject(); obj.isPast = isPastBooking(b.date, b.slot); return obj; });
         res.json(bookingsWithStatus);
     } catch (error) {
         res.status(500).json({ message: "Error fetching bookings", error: error.message });
@@ -205,16 +149,8 @@ exports.getUserBookings = async (req, res) => {
 
 exports.getAllBookings = async (req, res) => {
     try {
-        const bookings = await Booking.find()
-            .populate('userId', 'name email')
-            .populate('resourceId', 'name type location')
-            .sort({ date: -1, createdAt: -1 });
-        
-        const bookingsWithStatus = bookings.map(b => {
-            const obj = b.toObject();
-            obj.isPast = isPastBooking(b.date, b.slot);
-            return obj;
-        });
+        const bookings = await Booking.find().populate('userId', 'name email').populate('resourceId', 'name type location').sort({ date: -1, createdAt: -1 });
+        const bookingsWithStatus = bookings.map(b => { const obj = b.toObject(); obj.isPast = isPastBooking(b.date, b.slot); return obj; });
         res.json(bookingsWithStatus);
     } catch (error) {
         res.status(500).json({ message: "Error fetching bookings", error: error.message });
