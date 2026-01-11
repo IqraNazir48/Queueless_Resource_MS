@@ -1,0 +1,327 @@
+<!-- frontend/views/admin/notifications.ejs -->
+<%- include('../partials/header', {title: 'Manage Notifications'}) %>
+<%- include('../partials/navbar', {page: 'admin-notifications'}) %>
+
+<div class="container my-5">
+    <div class="page-header">
+        <h2><i class="bi bi-bell-fill"></i> Manage Notifications</h2>
+        <p>Create and manage system notifications</p>
+    </div>
+    
+    <div id="messageContainer"></div>
+    
+    <!-- Create Notification Card -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-plus-circle"></i> Create New Notification
+                </div>
+                <div class="card-body">
+                    <form id="createNotificationForm">
+                        <div class="mb-3">
+                            <label for="notifTitle" class="form-label">Title</label>
+                            <input type="text" class="form-control" id="notifTitle" required placeholder="e.g., System Maintenance">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notifMessage" class="form-label">Message</label>
+                            <textarea class="form-control" id="notifMessage" rows="3" required placeholder="Enter notification message..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="notifType" class="form-label">Type</label>
+                                <select class="form-select" id="notifType">
+                                    <option value="info">Info (Blue)</option>
+                                    <option value="success">Success (Green)</option>
+                                    <option value="warning">Warning (Yellow)</option>
+                                    <option value="danger">Danger (Red)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="notifCategory" class="form-label">Category</label>
+                                <select class="form-select" id="notifCategory">
+                                    <option value="announcement">Announcement</option>
+                                    <option value="system">System</option>
+                                    <option value="resource">Resource</option>
+                                    <option value="booking">Booking</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="notifTarget" class="form-label">Target</label>
+                                <select class="form-select" id="notifTarget">
+                                    <option value="all">Everyone</option>
+                                    <option value="resident">Residents Only</option>
+                                    <option value="admin">Admins Only</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="notifExpires" class="form-label">Expiration Date (Optional)</label>
+                            <input type="datetime-local" class="form-control" id="notifExpires">
+                            <small class="text-muted">Leave empty for permanent notification</small>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100" id="createNotifBtn">
+                            <i class="bi bi-send-fill"></i> Send Notification
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Notifications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-list-ul"></i> All Notifications</span>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="loadAllNotifications()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="loadingNotifications" class="text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-3 text-muted">Loading notifications...</p>
+                    </div>
+                    
+                    <div id="notificationsContainer" style="display: none;">
+                        <div id="notificationsList"></div>
+                    </div>
+                    
+                    <div id="noNotifications" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-bell-slash" style="font-size: 4rem; color: var(--text-muted);"></i>
+                        <h4 class="mt-3">No Notifications</h4>
+                        <p class="text-muted">Create your first notification above</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Create notification
+document.getElementById('createNotificationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const title = document.getElementById('notifTitle').value;
+    const message = document.getElementById('notifMessage').value;
+    const type = document.getElementById('notifType').value;
+    const category = document.getElementById('notifCategory').value;
+    const targetRole = document.getElementById('notifTarget').value;
+    const expiresAt = document.getElementById('notifExpires').value || null;
+    
+    const btn = document.getElementById('createNotifBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/notifications', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title,
+                message,
+                type,
+                category,
+                targetRole,
+                expiresAt
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Notification sent successfully!', 'success');
+            document.getElementById('createNotificationForm').reset();
+            loadAllNotifications();
+        } else {
+            showMessage(data.message || 'Failed to send notification', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-send-fill"></i> Send Notification';
+    }
+});
+
+// Load all notifications
+async function loadAllNotifications() {
+    const token = getToken();
+    
+    document.getElementById('loadingNotifications').style.display = 'block';
+    document.getElementById('notificationsContainer').style.display = 'none';
+    document.getElementById('noNotifications').style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/notifications/all', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const notifications = await response.json();
+            displayAllNotifications(notifications);
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        showMessage('Error loading notifications', 'danger');
+    }
+}
+
+// Display all notifications
+function displayAllNotifications(notifications) {
+    const loadingDiv = document.getElementById('loadingNotifications');
+    const containerDiv = document.getElementById('notificationsContainer');
+    const noNotificationsDiv = document.getElementById('noNotifications');
+    const listDiv = document.getElementById('notificationsList');
+    
+    loadingDiv.style.display = 'none';
+    
+    if (notifications.length === 0) {
+        noNotificationsDiv.style.display = 'block';
+        return;
+    }
+    
+    containerDiv.style.display = 'block';
+    listDiv.innerHTML = '';
+    
+    notifications.forEach(notif => {
+        const typeIcon = getNotificationIcon(notif.type);
+        const typeBadge = getTypeBadge(notif.type);
+        const targetBadge = getTargetBadge(notif.targetRole);
+        const timeAgo = getTimeAgo(notif.createdAt);
+        
+        const card = `
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="bi bi-${typeIcon} text-${notif.type} fs-4 me-3"></i>
+                                <div>
+                                    <h5 class="mb-1">${notif.title}</h5>
+                                    <div class="d-flex gap-2 mb-2">
+                                        ${typeBadge}
+                                        ${targetBadge}
+                                        <span class="badge badge-secondary">${notif.category}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="mb-2">${notif.message}</p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> ${timeAgo}
+                                ${notif.expiresAt ? ` | <i class="bi bi-hourglass"></i> Expires: ${new Date(notif.expiresAt).toLocaleString()}` : ''}
+                            </small>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteNotification('${notif._id}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        listDiv.innerHTML += card;
+    });
+}
+
+function getNotificationIcon(type) {
+    switch(type) {
+        case 'success': return 'check-circle-fill';
+        case 'warning': return 'exclamation-triangle-fill';
+        case 'danger': return 'x-circle-fill';
+        default: return 'info-circle-fill';
+    }
+}
+
+function getTypeBadge(type) {
+    const badges = {
+        info: '<span class="badge badge-primary">Info</span>',
+        success: '<span class="badge badge-success">Success</span>',
+        warning: '<span class="badge badge-warning">Warning</span>',
+        danger: '<span class="badge badge-danger">Danger</span>'
+    };
+    return badges[type] || badges.info;
+}
+
+function getTargetBadge(target) {
+    const badges = {
+        all: '<span class="badge" style="background-color: #8b5cf6; color: white;">Everyone</span>',
+        resident: '<span class="badge" style="background-color: #10b981; color: white;">Residents</span>',
+        admin: '<span class="badge" style="background-color: #f59e0b; color: white;">Admins</span>'
+    };
+    return badges[target] || badges.all;
+}
+
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+// Delete notification
+async function deleteNotification(notificationId) {
+    if (!confirm('Are you sure you want to delete this notification?')) return;
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            showMessage('Notification deleted successfully', 'success');
+            loadAllNotifications();
+        } else {
+            const data = await response.json();
+            showMessage(data.message || 'Failed to delete notification', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    }
+}
+
+// Load notifications on page load
+loadAllNotifications();
+</script>
+
+<%- include('../partials/footer') %>

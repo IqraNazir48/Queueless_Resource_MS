@@ -1,0 +1,763 @@
+<%- include('../partials/header', {title: 'System Settings'}) %>
+<%- include('../partials/navbar', {page: 'admin-settings'}) %>
+
+<div class="container my-5">
+    <div class="page-header">
+        <h2><i class="bi bi-gear-fill"></i> System Settings</h2>
+        <p>Manage resource types, time slots, and booking limits</p>
+    </div>
+    
+    <div id="messageContainer"></div>
+    
+    <div class="row">
+        <!-- Resource Types Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-tags-fill"></i> Resource Types</span>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addResourceTypeModal">
+                        <i class="bi bi-plus-circle"></i> Add Type
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div id="resourceTypesList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Booking Limits Card -->
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-sliders"></i> Booking Limits
+                </div>
+                <div class="card-body">
+                    <form id="bookingLimitsForm">
+                        <div class="mb-3">
+                            <label for="dailyLimit" class="form-label">Daily Limit</label>
+                            <input type="number" class="form-control" id="dailyLimit" min="1" max="10" required>
+                            <small class="text-muted">Max bookings per day per type</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="weeklyLimit" class="form-label">Weekly Limit</label>
+                            <input type="number" class="form-control" id="weeklyLimit" min="1" max="50" required>
+                            <small class="text-muted">Max bookings per week per type</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="advanceBookingLimit" class="form-label">Advance Booking Limit</label>
+                            <input type="number" class="form-control" id="advanceBookingLimit" min="0" max="10" required>
+                            <small class="text-muted">Max future bookings</small>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-check-circle"></i> Update Limits
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Resource Type Modal -->
+<div class="modal fade" id="addResourceTypeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Resource Type</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addResourceTypeForm">
+                    <div class="mb-3">
+                        <label for="rtLabel" class="form-label">Display Name</label>
+                        <input type="text" class="form-control" id="rtLabel" placeholder="e.g., Gaming Room" required>
+                        <small class="text-muted">Name shown to users</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rtValue" class="form-label">System Value</label>
+                        <input type="text" class="form-control" id="rtValue" placeholder="e.g., gaming_room" required>
+                        <small class="text-muted">No spaces, use underscores (e.g., study_room, gym_equipment)</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Icon</label>
+                        <div class="icon-selector-grid">
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-droplet" value="droplet" checked>
+                            <label class="btn btn-outline-primary icon-option" for="icon-droplet">
+                                <i class="bi bi-droplet-fill"></i>
+                                <span>Droplet</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-book" value="book">
+                            <label class="btn btn-outline-primary icon-option" for="icon-book">
+                                <i class="bi bi-book-fill"></i>
+                                <span>Book</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-trophy" value="trophy">
+                            <label class="btn btn-outline-primary icon-option" for="icon-trophy">
+                                <i class="bi bi-trophy-fill"></i>
+                                <span>Trophy</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-controller" value="controller">
+                            <label class="btn btn-outline-primary icon-option" for="icon-controller">
+                                <i class="bi bi-controller"></i>
+                                <span>Gaming</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-bicycle" value="bicycle">
+                            <label class="btn btn-outline-primary icon-option" for="icon-bicycle">
+                                <i class="bi bi-bicycle"></i>
+                                <span>Bicycle</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-film" value="film">
+                            <label class="btn btn-outline-primary icon-option" for="icon-film">
+                                <i class="bi bi-film"></i>
+                                <span>Movie</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-music" value="music-note-beamed">
+                            <label class="btn btn-outline-primary icon-option" for="icon-music">
+                                <i class="bi bi-music-note-beamed"></i>
+                                <span>Music</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-camera" value="camera-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-camera">
+                                <i class="bi bi-camera-fill"></i>
+                                <span>Camera</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-printer" value="printer-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-printer">
+                                <i class="bi bi-printer-fill"></i>
+                                <span>Printer</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-laptop" value="laptop">
+                            <label class="btn btn-outline-primary icon-option" for="icon-laptop">
+                                <i class="bi bi-laptop"></i>
+                                <span>Laptop</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-projector" value="display">
+                            <label class="btn btn-outline-primary icon-option" for="icon-projector">
+                                <i class="bi bi-display"></i>
+                                <span>Display</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-tools" value="tools">
+                            <label class="btn btn-outline-primary icon-option" for="icon-tools">
+                                <i class="bi bi-tools"></i>
+                                <span>Tools</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-briefcase" value="briefcase-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-briefcase">
+                                <i class="bi bi-briefcase-fill"></i>
+                                <span>Briefcase</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-lightbulb" value="lightbulb-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-lightbulb">
+                                <i class="bi bi-lightbulb-fill"></i>
+                                <span>Lightbulb</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-house" value="house-door-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-house">
+                                <i class="bi bi-house-door-fill"></i>
+                                <span>House</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-cart" value="cart-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-cart">
+                                <i class="bi bi-cart-fill"></i>
+                                <span>Cart</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-basket" value="basket-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-basket">
+                                <i class="bi bi-basket-fill"></i>
+                                <span>Basket</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-car" value="car-front-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-car">
+                                <i class="bi bi-car-front-fill"></i>
+                                <span>Car</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-globe" value="globe">
+                            <label class="btn btn-outline-primary icon-option" for="icon-globe">
+                                <i class="bi bi-globe"></i>
+                                <span>Globe</span>
+                            </label>
+                            
+                            <input type="radio" class="btn-check" name="iconSelect" id="icon-heart" value="heart-fill">
+                            <label class="btn btn-outline-primary icon-option" for="icon-heart">
+                                <i class="bi bi-heart-fill"></i>
+                                <span>Heart</span>
+                            </label>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Select an icon that represents this resource type</small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveResourceTypeBtn">Add Resource Type</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.icon-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+}
+
+.icon-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.5rem;
+    gap: 0.5rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.icon-option i {
+    font-size: 1.5rem;
+}
+
+.icon-option span {
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.icon-option:hover {
+    transform: translateY(-2px);
+}
+
+.btn-check:checked + .icon-option {
+    background-color: var(--primary);
+    color: white !important;
+    border-color: var(--primary);
+}
+
+@media (max-width: 576px) {
+    .icon-selector-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+</style>
+
+<!-- Manage Time Slots Modal -->
+<div class="modal fade" id="manageSlotsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-clock-fill"></i> Manage Time Slots for <span id="modalResourceTypeName"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="currentResourceType">
+                
+                <!-- Current Slots -->
+                <div class="mb-4">
+                    <h6 class="fw-bold mb-3">Current Time Slots</h6>
+                    <div id="currentSlotsList" class="border rounded p-3" style="min-height: 100px; max-height: 300px; overflow-y: auto;">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Slot Duration Selector -->
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-3">Select Slot Duration</h6>
+                    <div class="btn-group w-100" role="group">
+                        <input type="radio" class="btn-check" name="slotDuration" id="duration30" value="30" checked>
+                        <label class="btn btn-outline-primary" for="duration30">30 Minutes</label>
+                        
+                        <input type="radio" class="btn-check" name="slotDuration" id="duration60" value="60">
+                        <label class="btn btn-outline-primary" for="duration60">1 Hour</label>
+                        
+                        <input type="radio" class="btn-check" name="slotDuration" id="duration120" value="120">
+                        <label class="btn btn-outline-primary" for="duration120">2 Hours</label>
+                    </div>
+                </div>
+                
+                <!-- Add New Slot -->
+                <div class="mb-3">
+                    <h6 class="fw-bold mb-3">Add New Time Slot</h6>
+                    <div class="row g-2">
+                        <div class="col-10">
+                            <label class="form-label">Start Time</label>
+                            <select class="form-select" id="slotStartTime">
+                                <option value="">Select start time</option>
+                            </select>
+                        </div>
+                        <div class="col-2">
+                            <label class="form-label">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" id="addSlotBtn">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <small class="text-muted">End time will be calculated based on selected duration</small>
+                </div>
+                
+                <!-- Quick Add Suggestions -->
+                <div>
+                    <h6 class="fw-bold mb-2">Quick Add</h6>
+                    <div class="d-flex flex-wrap gap-2" id="quickAddSlots">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let settings = null;
+let currentManagingType = null;
+
+// Generate time options based on duration (30 min intervals for flexibility)
+function generateTimeOptions() {
+    const times = [];
+    for (let h = 0; h < 24; h++) {
+        times.push(`${String(h).padStart(2, '0')}:00`);
+        times.push(`${String(h).padStart(2, '0')}:30`);
+    }
+    return times;
+}
+
+// Calculate end time based on start time and duration
+function calculateEndTime(startTime, durationMinutes) {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    let totalMinutes = startHour * 60 + startMinute + durationMinutes;
+    
+    // Handle overflow past midnight
+    if (totalMinutes >= 24 * 60) {
+        totalMinutes = totalMinutes % (24 * 60);
+    }
+    
+    const endHour = Math.floor(totalMinutes / 60);
+    const endMinute = totalMinutes % 60;
+    
+    return `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+}
+
+// Populate time dropdowns
+function populateTimeDropdowns() {
+    const times = generateTimeOptions();
+    const startSelect = document.getElementById('slotStartTime');
+    
+    startSelect.innerHTML = '<option value="">Select start time</option>';
+    
+    times.forEach(time => {
+        startSelect.innerHTML += `<option value="${time}">${time}</option>`;
+    });
+}
+
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+async function loadSettings() {
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/settings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        settings = await response.json();
+        displayResourceTypes();
+        displayBookingLimits();
+    } catch (error) {
+        showMessage('Error loading settings', 'danger');
+    }
+}
+
+function displayResourceTypes() {
+    const container = document.getElementById('resourceTypesList');
+    container.innerHTML = '';
+    
+    if (!settings.resourceTypes || settings.resourceTypes.length === 0) {
+        container.innerHTML = '<p class="text-muted">No resource types defined.</p>';
+        return;
+    }
+    
+    settings.resourceTypes.forEach(rt => {
+        const slotCount = rt.timeSlots ? rt.timeSlots.length : 0;
+        const item = `
+            <div class="d-flex justify-content-between align-items-center mb-3 p-3 border rounded">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-${rt.icon} me-2 fs-4"></i>
+                        <strong class="fs-5">${rt.label}</strong>
+                        <span class="badge badge-secondary ms-2">${rt.value}</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> ${slotCount} time slot${slotCount !== 1 ? 's' : ''}
+                    </small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-primary" onclick='openSlotManager("${rt.value}", "${rt.label}")'>
+                        <i class="bi bi-clock-history"></i> Manage Slots
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="removeResourceType('${rt.value}')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        container.innerHTML += item;
+    });
+}
+
+function openSlotManager(typeValue, typeLabel) {
+    currentManagingType = typeValue;
+    document.getElementById('currentResourceType').value = typeValue;
+    document.getElementById('modalResourceTypeName').textContent = typeLabel;
+    
+    populateTimeDropdowns();
+    displayCurrentSlots();
+    generateQuickAddButtons();
+    
+    const modal = new bootstrap.Modal(document.getElementById('manageSlotsModal'));
+    modal.show();
+}
+
+function displayCurrentSlots() {
+    const container = document.getElementById('currentSlotsList');
+    const type = settings.resourceTypes.find(rt => rt.value === currentManagingType);
+    
+    if (!type || !type.timeSlots || type.timeSlots.length === 0) {
+        container.innerHTML = '<p class="text-muted text-center my-3">No time slots configured yet. Add slots below.</p>';
+        return;
+    }
+    
+    const sortedSlots = [...type.timeSlots].sort();
+    
+    container.innerHTML = sortedSlots.map(slot => `
+        <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded" style="background-color: var(--bg-secondary);">
+            <span><i class="bi bi-clock-fill text-primary"></i> <strong>${slot}</strong></span>
+            <button class="btn btn-sm btn-danger" onclick="removeSlotFromType('${currentManagingType}', '${slot}')">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </div>
+    `).join('');
+}
+
+function generateQuickAddButtons() {
+    const container = document.getElementById('quickAddSlots');
+    const type = settings.resourceTypes.find(rt => rt.value === currentManagingType);
+    const existingSlots = type && type.timeSlots ? type.timeSlots : [];
+    
+    // Get selected duration
+    const duration = parseInt(document.querySelector('input[name="slotDuration"]:checked')?.value || 60);
+    
+    // Generate suggestions based on duration
+    const suggestions = [];
+    const step = duration === 30 ? 30 : 60; // For 30min use 30min steps, otherwise hourly
+    
+    for (let minutes = 8 * 60; minutes < 23 * 60; minutes += step) {
+        const startHour = Math.floor(minutes / 60);
+        const startMin = minutes % 60;
+        const startTime = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}`;
+        const endTime = calculateEndTime(startTime, duration);
+        const slot = `${startTime}-${endTime}`;
+        
+        if (!existingSlots.includes(slot)) {
+            suggestions.push(slot);
+        }
+    }
+    
+    if (suggestions.length === 0) {
+        container.innerHTML = '<small class="text-muted">All suggested slots for this duration are added</small>';
+        return;
+    }
+    
+    container.innerHTML = suggestions.slice(0, 12).map(slot => `
+        <button class="btn btn-sm btn-outline-primary" onclick="quickAddSlot('${slot}')">
+            <i class="bi bi-plus-circle"></i> ${slot}
+        </button>
+    `).join('');
+}
+
+// Update quick add buttons when duration changes
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[name="slotDuration"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (currentManagingType) {
+                generateQuickAddButtons();
+            }
+        });
+    });
+});
+
+async function quickAddSlot(slot) {
+    await addSlotToType(currentManagingType, slot);
+}
+
+document.getElementById('addSlotBtn').addEventListener('click', async function() {
+    const startTime = document.getElementById('slotStartTime').value;
+    const duration = parseInt(document.querySelector('input[name="slotDuration"]:checked')?.value || 60);
+    
+    if (!startTime) {
+        showMessage('Please select a start time', 'warning');
+        return;
+    }
+    
+    const endTime = calculateEndTime(startTime, duration);
+    const slot = `${startTime}-${endTime}`;
+    
+    await addSlotToType(currentManagingType, slot);
+});
+
+async function addSlotToType(resourceType, slot) {
+    const token = getToken();
+    
+    if (!token) {
+        showMessage('Please login again', 'danger');
+        setTimeout(() => window.location.href = '/login', 1500);
+        return;
+    }
+    
+    const btn = document.getElementById('addSlotBtn');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    
+    try {
+        console.log('Sending request:', {
+            url: '/api/settings/resource-types/time-slots',
+            method: 'POST',
+            body: { resourceType, slot }
+        });
+        
+        const response = await fetch('/api/settings/resource-types/time-slots', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ resourceType, slot })
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textResponse = await response.text();
+            console.error('Non-JSON response:', textResponse);
+            showMessage('Server error: Expected JSON but got HTML. Check server logs.', 'danger');
+            return;
+        }
+        
+        const data = await response.json();
+        console.log('Response data:', data);
+        
+        if (response.ok) {
+            showMessage('Time slot added successfully!', 'success');
+            settings = data.settings;
+            displayResourceTypes();
+            displayCurrentSlots();
+            generateQuickAddButtons();
+            
+            // Reset dropdown
+            document.getElementById('slotStartTime').value = '';
+        } else {
+            showMessage(data.message || 'Error adding time slot', 'danger');
+            console.error('Error response:', data);
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error: ' + error.message + '. Check browser console for details.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+async function removeSlotFromType(resourceType, slot) {
+    if (!confirm(`Remove time slot ${slot}?`)) return;
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/settings/resource-types/time-slots', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ resourceType, slot })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Time slot removed successfully!', 'success');
+            settings = data.settings;
+            displayResourceTypes();
+            displayCurrentSlots();
+            generateQuickAddButtons();
+        } else {
+            showMessage(data.message || 'Error removing time slot', 'danger');
+            console.error('Error response:', data);
+        }
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error: ' + error.message, 'danger');
+    }
+}
+
+function displayBookingLimits() {
+    document.getElementById('dailyLimit').value = settings.bookingLimits.dailyLimit;
+    document.getElementById('weeklyLimit').value = settings.bookingLimits.weeklyLimit;
+    document.getElementById('advanceBookingLimit').value = settings.bookingLimits.advanceBookingLimit;
+}
+
+document.getElementById('saveResourceTypeBtn').addEventListener('click', async function() {
+    const label = document.getElementById('rtLabel').value.trim();
+    const value = document.getElementById('rtValue').value.trim();
+    const icon = document.querySelector('input[name="iconSelect"]:checked')?.value || 'grid';
+    
+    if (!label || !value) {
+        showMessage('Please fill in all required fields', 'warning');
+        return;
+    }
+    
+    const btn = this;
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/settings/resource-types', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ label, value, icon })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Resource type added successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('addResourceTypeModal')).hide();
+            document.getElementById('addResourceTypeForm').reset();
+            // Reset to first icon
+            document.getElementById('icon-droplet').checked = true;
+            settings = data.settings;
+            displayResourceTypes();
+        } else {
+            showMessage(data.message || 'Error adding resource type', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error: ' + error.message, 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+});
+
+async function removeResourceType(value) {
+    if (!confirm('Remove this resource type?')) return;
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/settings/resource-types', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ value })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Resource type removed!', 'success');
+            settings = data.settings;
+            displayResourceTypes();
+        }
+    } catch (error) {
+        showMessage('Error removing resource type', 'danger');
+    }
+}
+
+document.getElementById('bookingLimitsForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const dailyLimit = parseInt(document.getElementById('dailyLimit').value);
+    const weeklyLimit = parseInt(document.getElementById('weeklyLimit').value);
+    const advanceBookingLimit = parseInt(document.getElementById('advanceBookingLimit').value);
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/settings/booking-limits', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ dailyLimit, weeklyLimit, advanceBookingLimit })
+        });
+        
+        if (response.ok) {
+            showMessage('Booking limits updated!', 'success');
+            loadSettings();
+        }
+    } catch (error) {
+        showMessage('Error updating limits', 'danger');
+    }
+});
+
+loadSettings();
+</script>
+
+<%- include('../partials/footer') %>

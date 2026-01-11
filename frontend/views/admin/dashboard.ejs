@@ -1,0 +1,373 @@
+<%- include('../partials/header', {title: 'Admin Dashboard'}) %>
+<%- include('../partials/navbar') %>
+
+<div class="container my-5">
+    <!-- Admin Welcome Banner with Profile Picture -->
+    <div class="card mb-4 admin-welcome-banner">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <img id="adminDashboardProfilePic" src="/images/default-avatar.png" alt="Profile" class="rounded-circle profile-pic-large">
+                </div>
+                <div class="col">
+                    <h2 class="mb-2 admin-welcome-title" >
+                         Welcome, Admin <strong><%= user.name %></strong>!
+                    </h2>
+                    <p class="mb-0 admin-welcome-subtitle">
+                        Manage your system resources and monitor bookings efficiently
+                    </p>
+                </div>
+                <div class="col-auto mt-3 mt-md-0">
+                    <button class="btn btn-light btn-lg" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+                        <i class="bi bi-plus-circle-fill"></i> Add Resource
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2> System Overview</h2>
+        <p>Monitor and manage all system activities</p>
+    </div>
+    
+    <!-- Stats Row -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-grid"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalResources">-</h3>
+                    <p>Total Resources</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="activeBookings">-</h3>
+                    <p>Active Bookings</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="bi bi-clock-history"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="todayBookings">-</h3>
+                    <p>Today's Bookings</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="cancelledBookings">-</h3>
+                    <p>Cancelled</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning-charge"></i> Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <a href="/admin/resources" class="btn btn-primary w-100">
+                                <i class="bi bi-grid"></i> Manage Resources
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <a href="/admin/bookings" class="btn btn-success w-100">
+                                <i class="bi bi-list-check"></i> View All Bookings
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+                                <i class="bi bi-plus-circle"></i> Add Resource
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="loadDashboard()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Resources by Type -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-pie-chart"></i> Resources by Type
+                </div>
+                <div class="card-body">
+                    <div class="row" id="resourcesByType">
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="bi bi-droplet text-primary" style="font-size: 2.5rem;"></i>
+                                <h3 class="mt-2" id="laundryCount">-</h3>
+                                <p class="text-muted">Laundry</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="bi bi-book text-success" style="font-size: 2.5rem;"></i>
+                                <h3 class="mt-2" id="studyCount">-</h3>
+                                <p class="text-muted">Study Rooms</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="p-3">
+                                <i class="bi bi-trophy text-warning" style="font-size: 2.5rem;"></i>
+                                <h3 class="mt-2" id="sportsCount">-</h3>
+                                <p class="text-muted">Sports</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Activity -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-activity"></i> Recent Bookings</span>
+                    <a href="/admin/bookings" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    <div id="loadingActivity" class="text-center py-4">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-2 text-muted">Loading recent activity...</p>
+                    </div>
+                    
+                    <div id="recentActivity" class="table-responsive" style="display: none;">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Resource</th>
+                                    <th>Date</th>
+                                    <th>Time Slot</th>
+                                    <th>Status</th>
+                                    <th>Booked At</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activityTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Resource Modal -->
+<div class="modal fade" id="addResourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addResourceForm">
+                    <div class="mb-3">
+                        <label for="resourceName" class="form-label">Resource Name</label>
+                        <input type="text" class="form-control" id="resourceName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resourceType" class="form-label">Type</label>
+                        <select class="form-select" id="resourceType" required>
+                            <option value="laundry">Laundry</option>
+                            <option value="study_room">Study Room</option>
+                            <option value="sports">Sports</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resourceLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="resourceLocation" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveResourceBtn">
+                    <i class="bi bi-check-circle"></i> Add Resource
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Profile Picture in Dashboard */
+.profile-pic-large {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Admin Welcome Banner - NEW COLORS */
+.admin-welcome-banner {
+    background: linear-gradient(135deg, #DDA853 0%, #c48a3a 100%);
+    border: 3px solid #27548A;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    position: relative;
+}
+
+.admin-welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(39, 84, 138, 0.15) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.admin-welcome-banner .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+.admin-welcome-title {
+    color: #183B4E !important;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.admin-welcome-subtitle {
+    color: #27548A !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+.admin-welcome-banner .btn-light {
+    background-color: #183B4E;
+    color: #F5EEDC !important;
+    border: 2px solid #27548A;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(24, 59, 78, 0.3);
+}
+
+.admin-welcome-banner .btn-light:hover {
+    background-color: #27548A;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(24, 59, 78, 0.5);
+}
+
+/* Ensure consistency across themes */
+[data-theme="light"] .admin-welcome-title {
+    color: #183B4E !important;
+}
+
+[data-theme="light"] .admin-welcome-subtitle {
+    color: #27548A !important;
+}
+
+[data-theme="dark"] .admin-welcome-title {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .admin-welcome-subtitle {
+    color: rgba(255, 255, 255, 0.95) !important;
+}
+
+/* Dark theme admin banner */
+[data-theme="dark"] .admin-welcome-banner {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: 3px solid #fbbf24;
+}
+
+[data-theme="dark"] .admin-welcome-banner .btn-light {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #f59e0b !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-pic-large {
+        width: 80px;
+        height: 80px;
+        border-width: 4px;
+    }
+    
+    .admin-welcome-title {
+        font-size: 1.5rem;
+    }
+    
+    .admin-welcome-subtitle {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+// Load profile picture
+(function() {
+    function loadAdminProfilePic() {
+        const adminProfilePic = document.getElementById('adminDashboardProfilePic');
+        if (!adminProfilePic) return;
+        
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.profilePicture && user.profilePicture !== 'default-avatar.png') {
+                adminProfilePic.src = user.profilePicture;
+            } else {
+                adminProfilePic.src = '/images/default-avatar.png';
+            }
+        } catch (e) {
+            console.log('Error loading profile picture');
+        }
+    }
+    
+    loadAdminProfilePic();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadAdminProfilePic);
+    }
+})();
+</script>
+
+<script src="/js/admin.js"></script>
+
+<%- include('../partials/footer') %>

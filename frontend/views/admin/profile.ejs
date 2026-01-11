@@ -1,0 +1,280 @@
+<%- include('../partials/header', {title: 'Admin Profile'}) %>
+<%- include('../partials/navbar', {page: 'admin-profile'}) %>
+
+<div class="container my-5">
+    <div class="page-header">
+        <h2><i class="bi bi-person-circle"></i> Admin Profile</h2>
+        <p>Manage your account settings and password</p>
+    </div>
+    
+    <div id="messageContainer"></div>
+    
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-person-fill"></i> Profile Information
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <img id="profilePreview" src="" alt="Profile" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover; border: 4px solid var(--primary);">
+                            <label for="profilePictureInput" class="position-absolute bottom-0 end-0 btn btn-primary btn-sm rounded-circle" style="width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-camera-fill"></i>
+                            </label>
+                            <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <form id="profileForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name" value="<%= user.name %>" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email" value="<%= user.email %>" disabled readonly style="background-color: var(--bg-secondary); cursor: not-allowed;">
+                            <small class="text-muted">Email cannot be changed for security reasons</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Account Type</label>
+                            <input type="text" class="form-control" value="Administrator" disabled style="background-color: var(--bg-secondary); cursor: not-allowed;">
+                            <span class="badge badge-warning mt-2"><i class="bi bi-shield-fill-check"></i> Admin Access</span>
+                            <br>
+                            <small class="text-muted">Role cannot be changed</small>
+                        </div>
+                        
+                        <input type="hidden" id="profilePictureData">
+                        
+                        <button type="submit" class="btn btn-primary w-100" id="updateProfileBtn">
+                            <i class="bi bi-check-circle"></i> Update Profile
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-shield-lock-fill"></i> Change Password
+                </div>
+                <div class="card-body">
+                    <form id="passwordForm">
+                        <div class="mb-3">
+                            <label for="currentPassword" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="currentPassword" required autocomplete="current-password">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="newPassword" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="newPassword" minlength="6" required autocomplete="new-password">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirmPassword" minlength="6" required autocomplete="new-password">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100" id="changePasswordBtn">
+                            <i class="bi bi-key-fill"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function loadProfilePicture() {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const profilePreview = document.getElementById('profilePreview');
+    
+    if (user.profilePicture && user.profilePicture !== 'default-avatar.png') {
+        profilePreview.src = user.profilePicture;
+    } else {
+        profilePreview.src = '/images/default-avatar.png';
+    }
+}
+
+window.addEventListener('DOMContentLoaded', loadProfilePicture);
+
+document.getElementById('profilePictureInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+            showMessage('Image size should be less than 5MB', 'warning');
+            this.value = '';
+            return;
+        }
+        
+        if (!file.type.startsWith('image/')) {
+            showMessage('Please select a valid image file', 'warning');
+            this.value = '';
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            document.getElementById('profilePreview').src = event.target.result;
+            document.getElementById('profilePictureData').value = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('profileForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const btn = document.getElementById('updateProfileBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+    
+    const name = document.getElementById('name').value.trim();
+    const profilePicture = document.getElementById('profilePictureData').value;
+    const token = getToken();
+    
+    if (!token) {
+        showMessage('Authentication error. Please login again.', 'danger');
+        setTimeout(() => window.location.href = '/login', 1500);
+        return;
+    }
+    
+    try {
+        const payload = { name };
+        if (profilePicture) {
+            payload.profilePicture = profilePicture;
+        }
+        
+        const response = await fetch('/api/auth/update-profile', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Profile updated successfully!', 'success');
+            
+            const updatedUser = {
+                id: data.user.id,
+                name: data.user.name,
+                email: data.user.email,
+                role: data.user.role,
+                profilePicture: data.user.profilePicture
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+            
+            try {
+                await fetch('/api/auth/set-cookie', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ token: token, user: updatedUser })
+                });
+            } catch (cookieError) {
+                console.log('Cookie update completed');
+            }
+            
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showMessage(data.message || 'Failed to update profile', 'danger');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error updating profile. Please try again.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
+
+document.getElementById('passwordForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showMessage('New passwords do not match!', 'warning');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        showMessage('New password must be at least 6 characters long!', 'warning');
+        return;
+    }
+    
+    const btn = document.getElementById('changePasswordBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Changing...';
+    
+    const token = getToken();
+    
+    if (!token) {
+        showMessage('Authentication error. Please login again.', 'danger');
+        setTimeout(() => window.location.href = '/login', 1500);
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/auth/change-password', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Password changed successfully!', 'success');
+            document.getElementById('passwordForm').reset();
+        } else {
+            showMessage(data.message || 'Failed to change password', 'danger');
+        }
+        
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Error changing password. Please try again.', 'danger');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+});
+</script>
+
+<%- include('../partials/footer') %>

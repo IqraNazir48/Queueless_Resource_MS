@@ -1,0 +1,491 @@
+<%- include('../partials/header', {title: 'Dashboard', page: 'dashboard'}) %>
+<%- include('../partials/navbar', {page: 'dashboard'}) %>
+
+<div class="container my-5">
+    
+    <div class="card mb-4 welcome-banner">
+        <div class="card-body p-4">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <img id="dashboardProfilePic" src="/images/default-avatar.png" alt="Profile" class="rounded-circle profile-pic-large">
+                </div>
+                <div class="col">
+                    <h2 class="mb-2 welcome-title">
+                        Welcome back, <strong><%= user.name %></strong>!
+                    </h2>
+                    <p class="mb-0 welcome-subtitle">
+                        Ready to book your next resource? Let's make it happen!
+                    </p>
+                </div>
+                <div class="col-auto mt-3 mt-md-0">
+                    <a href="/book-resource" class="btn btn-light btn-lg">
+                        <i class="bi bi-plus-circle-fill"></i> Book Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Flash Messages -->
+    <% if (success && success.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle-fill me-2"></i><%= success %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    
+    <% if (error && error.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <% } %>
+    
+    <!-- Stats Row -->
+    <div class="row mb-4" id="statsRow">
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon primary">
+                    <i class="bi bi-calendar-check-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="activeBookings">-</h3>
+                    <p>Active Bookings</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon success">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="totalBookings">-</h3>
+                    <p>Total Bookings</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="stat-card">
+                <div class="stat-icon warning">
+                    <i class="bi bi-grid-3x3-gap-fill"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 id="availableResources">-</h3>
+                    <p>Available Resources</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <i class="bi bi-lightning-charge-fill"></i> Quick Actions
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="/book-resource" class="btn btn-primary w-100 btn-lg">
+                                <i class="bi bi-plus-circle-fill"></i>
+                                <span class="d-block mt-2">Book New Resource</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a href="/my-bookings" class="btn btn-outline-primary w-100 btn-lg">
+                                <i class="bi bi-calendar-event-fill"></i>
+                                <span class="d-block mt-2">View My Bookings</span>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-secondary w-100 btn-lg" onclick="loadDashboard()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                <span class="d-block mt-2">Refresh Dashboard</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Two Column Layout: Notifications + Recent Bookings -->
+    <div class="row">
+        <!-- Notifications Panel -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-bell-fill"></i> Recent Notifications</span>
+                    <button class="btn btn-sm btn-link text-primary p-0" onclick="loadDashboardNotifications()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div id="loadingDashNotifications" class="text-center py-5">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <p class="mt-2 text-muted small">Loading...</p>
+                    </div>
+                    
+                    <div id="dashNotificationsList" class="notification-list-dashboard" style="display: none; max-height: 400px; overflow-y: auto;">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    
+                    <div id="noDashNotifications" class="text-center py-5" style="display: none;">
+                        <i class="bi bi-bell-slash" style="font-size: 2rem; color: var(--text-muted);"></i>
+                        <p class="text-muted mt-2 small">No notifications</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Bookings -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clock-history"></i> Recent Bookings</span>
+                    <a href="/my-bookings" class="btn btn-sm btn-outline-primary">
+                        View All <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div id="loadingBookings" class="text-center py-5">
+                        <div class="spinner-border text-primary"></div>
+                        <p class="mt-3 text-muted">Loading your bookings...</p>
+                    </div>
+                    
+                    <div id="recentBookings" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Resource</th>
+                                        <th>Date</th>
+                                        <th>Time Slot</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="bookingsTableBody">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div id="noBookings" class="text-center py-5 d-none">
+                        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--text-muted);"></i>
+                        <h4 class="mt-4 mb-2">No bookings yet</h4>
+                        <p class="text-muted mb-4">Start by booking your first resource</p>
+                        <a href="/book-resource" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-circle-fill"></i> Make Your First Booking
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Profile Picture in Dashboard */
+.profile-pic-large {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* UPDATED: Welcome Banner - Match Admin Style with Custom Colors */
+.welcome-banner {
+    background: linear-gradient(135deg, #DDA853 0%, #c48a3a 100%);
+    border: 3px solid #27548A;
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    position: relative;
+}
+
+.welcome-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(39, 84, 138, 0.15) 0%, transparent 70%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.welcome-banner .card-body {
+    position: relative;
+    z-index: 1;
+}
+
+/* LIGHT THEME - Text Colors */
+.welcome-title {
+    color: #183B4E !important;
+    font-weight: 900;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.welcome-subtitle {
+    color: #27548A !important;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Button Styling */
+.welcome-banner .btn-light {
+    background-color: #183B4E;
+    color: #F5EEDC !important;
+    border: 2px solid #27548A;
+    font-weight: 700;
+    box-shadow: 0 4px 15px rgba(24, 59, 78, 0.3);
+}
+
+.welcome-banner .btn-light:hover {
+    background-color: #27548A;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(24, 59, 78, 0.5);
+}
+
+/* DARK THEME - Override Colors */
+[data-theme="dark"] .welcome-banner {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    border: 3px solid #fbbf24;
+}
+
+[data-theme="dark"] .welcome-title {
+    color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .welcome-subtitle {
+    color: rgba(255, 255, 255, 0.95) !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .welcome-banner .btn-light {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #f59e0b !important;
+    border: 2px solid white;
+}
+
+[data-theme="dark"] .welcome-banner .btn-light:hover {
+    background-color: white;
+    color: #d97706 !important;
+}
+
+/* Dashboard Notification Styles */
+.notification-list-dashboard {
+    padding: 0;
+}
+
+.dashboard-notification-item {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-muted);
+    transition: background-color 0.2s ease;
+}
+
+.dashboard-notification-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.dashboard-notification-item:last-child {
+    border-bottom: none;
+}
+
+.dashboard-notification-item.unread {
+    background-color: rgba(59, 130, 246, 0.05);
+    border-left: 3px solid var(--primary);
+}
+
+[data-theme="dark"] .dashboard-notification-item.unread {
+    background-color: rgba(112, 181, 249, 0.1);
+}
+
+.notification-icon-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .profile-pic-large {
+        width: 80px;
+        height: 80px;
+        border-width: 4px;
+    }
+    
+    .welcome-title {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1rem;
+    }
+}
+</style>
+
+<script>
+// Load profile picture
+(function() {
+    function loadDashboardProfilePic() {
+        const dashboardProfilePic = document.getElementById('dashboardProfilePic');
+        if (!dashboardProfilePic) return;
+        
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.profilePicture && user.profilePicture !== 'default-avatar.png') {
+                dashboardProfilePic.src = user.profilePicture;
+            } else {
+                dashboardProfilePic.src = '/images/default-avatar.png';
+            }
+        } catch (e) {
+            console.log('Error loading profile picture');
+        }
+    }
+    
+    loadDashboardProfilePic();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadDashboardProfilePic);
+    }
+})();
+
+// Load dashboard notifications
+async function loadDashboardNotifications() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    const loadingDiv = document.getElementById('loadingDashNotifications');
+    const listDiv = document.getElementById('dashNotificationsList');
+    const noNotifsDiv = document.getElementById('noDashNotifications');
+    
+    loadingDiv.style.display = 'block';
+    listDiv.style.display = 'none';
+    noNotifsDiv.style.display = 'none';
+    
+    try {
+        const response = await fetch('/api/notifications', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const notifications = await response.json();
+            
+            loadingDiv.style.display = 'none';
+            
+            if (notifications.length === 0) {
+                noNotifsDiv.style.display = 'block';
+                return;
+            }
+            
+            listDiv.style.display = 'block';
+            listDiv.innerHTML = '';
+            
+            // Show only last 5 notifications
+            notifications.slice(0, 5).forEach(notif => {
+                const isUnread = !notif.isReadByUser;
+                const typeIcon = getNotificationIcon(notif.type);
+                const typeColor = getNotificationColor(notif.type);
+                const timeAgo = getTimeAgo(notif.createdAt);
+                
+                const item = document.createElement('div');
+                item.className = `dashboard-notification-item ${isUnread ? 'unread' : ''}`;
+                item.onclick = () => markNotificationAsRead(notif._id);
+                
+                item.innerHTML = `
+                    <div class="d-flex align-items-start">
+                        <div class="notification-icon-small ${typeColor} me-3">
+                            <i class="bi bi-${typeIcon}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1" style="font-size: 0.9rem;">${notif.title}</h6>
+                            <p class="mb-1 text-muted" style="font-size: 0.8rem;">${notif.message}</p>
+                            <small class="text-muted" style="font-size: 0.75rem;">${timeAgo}</small>
+                        </div>
+                        ${isUnread ? '<div class="unread-dot" style="width: 8px; height: 8px;"></div>' : ''}
+                    </div>
+                `;
+                
+                listDiv.appendChild(item);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        loadingDiv.style.display = 'none';
+    }
+}
+
+function getNotificationIcon(type) {
+    switch(type) {
+        case 'success': return 'check-circle-fill';
+        case 'warning': return 'exclamation-triangle-fill';
+        case 'danger': return 'x-circle-fill';
+        default: return 'info-circle-fill';
+    }
+}
+
+function getNotificationColor(type) {
+    switch(type) {
+        case 'success': return 'text-success';
+        case 'warning': return 'text-warning';
+        case 'danger': return 'text-danger';
+        default: return 'text-primary';
+    }
+}
+
+function getTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+    
+    return date.toLocaleDateString();
+}
+
+async function markNotificationAsRead(notificationId) {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    try {
+        await fetch(`/api/notifications/${notificationId}/read`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        loadDashboardNotifications();
+    } catch (error) {
+        console.error('Error marking notification:', error);
+    }
+}
+
+// Load notifications when dashboard loads
+if (document.getElementById('dashNotificationsList')) {
+    loadDashboardNotifications();
+}
+</script>
+
+<script src="/js/dashboard.js"></script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,116 @@
+<!-- frontend/views/admin/all-bookings.ejs -->
+<%- include('../partials/header', {title: 'All Bookings'}) %>
+<%- include('../partials/navbar', {page: 'admin-bookings'}) %>
+
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="bi bi-list-check"></i> All Bookings</h2>
+        <p>View and manage all system bookings</p>
+    </div>
+    
+    <!-- Message Container -->
+    <div id="messageContainer"></div>
+    
+    <!-- Filter and Search Row -->
+    <div class="row mb-4">
+        <!-- Filters -->
+        <div class="col-12 mb-3">
+            <div class="btn-group w-100" role="group" style="flex-wrap: wrap; gap: 0.5rem;">
+                <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="all" checked>
+                <label class="btn btn-outline-primary" for="filterAll">All</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterActive" value="active">
+                <label class="btn btn-outline-primary" for="filterActive">Active</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterUpcoming" value="upcoming">
+                <label class="btn btn-outline-primary" for="filterUpcoming">Upcoming</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterCompleted" value="completed">
+                <label class="btn btn-outline-primary" for="filterCompleted">Completed</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterCancelled" value="cancelled">
+                <label class="btn btn-outline-primary" for="filterCancelled">Cancelled</label>
+            </div>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="col-12">
+            <input type="text" class="form-control" id="searchInput" placeholder="🔍 Search by resource name...">
+        </div>
+    </div>
+    
+    <!-- Bookings Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-table"></i> Bookings List</span>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadBookings()">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="loadingBookings" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3 text-muted">Loading bookings...</p>
+            </div>
+            
+            <div id="bookingsContainer" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Time Slot</th>
+                                <th>Status</th>
+                                <th>Booked At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">Showing <span id="showingCount">0</span> of <span id="totalCount">0</span> bookings</small>
+                </div>
+            </div>
+            
+            <div id="noBookings" class="text-center py-5" style="display: none;">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: var(--gray);"></i>
+                <h4 class="mt-3">No Bookings Found</h4>
+                <p class="text-muted">No bookings match your current filters.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this booking?</p>
+                <div id="cancelBookingDetails"></div>
+                <div class="alert alert-warning">
+                    <i class="bi bi-info-circle"></i> This will free up the slot for other users to book.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep It</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/all-bookings.js"></script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,407 @@
+<!-- frontend/views/resident/my-bookings.ejs -->
+<%- include('../partials/header', {title: 'My Bookings'}) %>
+<%- include('../partials/navbar', {page: 'my-bookings'}) %>
+
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h2><i class="bi bi-calendar-event"></i> My Bookings</h2>
+        <p>View and manage all your bookings</p>
+    </div>
+    
+    <!-- Message Container -->
+    <div id="messageContainer"></div>
+    
+    <!-- Filter and Search Row -->
+    <div class="row mb-4">
+        <!-- Filters -->
+        <div class="col-12 mb-3">
+            <div class="btn-group w-100" role="group" style="flex-wrap: wrap; gap: 0.5rem;">
+                <input type="radio" class="btn-check" name="statusFilter" id="filterAll" value="all" checked>
+                <label class="btn btn-outline-primary" for="filterAll">All Bookings</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterActive" value="active">
+                <label class="btn btn-outline-primary" for="filterActive">Active</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterUpcoming" value="upcoming">
+                <label class="btn btn-outline-primary" for="filterUpcoming">Upcoming</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterCompleted" value="completed">
+                <label class="btn btn-outline-primary" for="filterCompleted">Completed</label>
+                
+                <input type="radio" class="btn-check" name="statusFilter" id="filterCancelled" value="cancelled">
+                <label class="btn btn-outline-primary" for="filterCancelled">Cancelled</label>
+            </div>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="col-12">
+            <input type="text" class="form-control" id="searchInput" placeholder="🔍 Search by resource name...">
+        </div>
+    </div>
+    
+    <!-- Bookings List -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-list-check"></i> Your Bookings</span>
+            <a href="/book-resource" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-circle"></i> New Booking
+            </a>
+        </div>
+        <div class="card-body">
+            <div id="loadingBookings" class="text-center py-5">
+                <div class="spinner-border text-primary"></div>
+                <p class="mt-3 text-muted">Loading your bookings...</p>
+            </div>
+            
+            <div id="bookingsContainer" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Resource</th>
+                                <th>Location</th>
+                                <th>Date</th>
+                                <th>Time Slot</th>
+                                <th>Status</th>
+                                <th>Booked On</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bookingsTableBody">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="noBookings" class="text-center py-5" style="display: none;">
+                <i class="bi bi-inbox" style="font-size: 4rem; color: var(--gray);"></i>
+                <h4 class="mt-3">No Bookings Found</h4>
+                <p class="text-muted">You haven't made any bookings yet.</p>
+                <a href="/book-resource" class="btn btn-primary mt-3">
+                    <i class="bi bi-plus-circle"></i> Make Your First Booking
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Confirmation Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cancel Booking</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to cancel this booking?</p>
+                <div id="cancelBookingDetails"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No, Keep It</button>
+                <button type="button" class="btn btn-danger" id="confirmCancelBtn">Yes, Cancel Booking</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allBookings = [];
+let allResources = [];
+let currentFilter = 'all';
+let searchQuery = '';
+let bookingToCancel = null;
+
+// Get token
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+// Show message
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Check if booking is in the past
+function isPastBooking(date, slot) {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // If date is in the past
+    if (date < today) {
+        return true;
+    }
+    
+    // If date is today, check if slot time has passed
+    if (date === today) {
+        const currentTime = new Date();
+        const currentHour = currentTime.getHours();
+        const currentMinute = currentTime.getMinutes();
+        const currentTimeMinutes = currentHour * 60 + currentMinute;
+        
+        // Extract end time from slot (e.g., "08:00-09:00" -> 09:00)
+        const slotEndTime = slot.split('-')[1]; // "09:00"
+        const [endHour, endMinute] = slotEndTime.split(':').map(Number);
+        const slotEndMinutes = endHour * 60 + endMinute;
+        
+        // If current time is past the slot end time
+        if (currentTimeMinutes >= slotEndMinutes) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Load bookings and resources
+async function loadData() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    try {
+        // Load bookings
+        const bookingsResponse = await fetch('/api/bookings/my', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (bookingsResponse.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        allBookings = await bookingsResponse.json();
+        
+        // Load resources
+        const resourcesResponse = await fetch('/api/resources', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        allResources = await resourcesResponse.json();
+        
+        displayBookings();
+        
+    } catch (error) {
+        console.error('Error loading data:', error);
+        showMessage('Error loading bookings', 'danger');
+    }
+}
+
+// Display bookings
+function displayBookings() {
+    const loadingDiv = document.getElementById('loadingBookings');
+    const containerDiv = document.getElementById('bookingsContainer');
+    const noBookingsDiv = document.getElementById('noBookings');
+    const tbody = document.getElementById('bookingsTableBody');
+    
+    loadingDiv.style.display = 'none';
+    
+    // Filter bookings
+    let filteredBookings = allBookings;
+    
+    if (currentFilter === 'active') {
+        filteredBookings = filteredBookings.filter(b => b.status === 'active');
+    } else if (currentFilter === 'upcoming') {
+        filteredBookings = filteredBookings.filter(b => b.status === 'active' && !b.isPast);
+    } else if (currentFilter === 'completed') {
+        filteredBookings = filteredBookings.filter(b => b.status === 'active' && b.isPast);
+    } else if (currentFilter === 'cancelled') {
+        filteredBookings = filteredBookings.filter(b => b.status === 'cancelled');
+    }
+    
+    // Apply search filter
+    if (searchQuery) {
+        filteredBookings = filteredBookings.filter(b => {
+            let resourceName = '';
+            
+            if (b.resourceId) {
+                if (typeof b.resourceId === 'object' && b.resourceId.name) {
+                    resourceName = b.resourceId.name.toLowerCase();
+                } else {
+                    const resource = allResources.find(r => r._id === b.resourceId);
+                    resourceName = resource ? resource.name.toLowerCase() : '';
+                }
+            }
+            
+            return resourceName.includes(searchQuery.toLowerCase());
+        });
+    }
+    
+    if (filteredBookings.length === 0) {
+        noBookingsDiv.style.display = 'block';
+        containerDiv.style.display = 'none';
+        return;
+    }
+    
+    noBookingsDiv.style.display = 'none';
+    containerDiv.style.display = 'block';
+    tbody.innerHTML = '';
+    
+    filteredBookings.forEach(booking => {
+        // Handle both populated and non-populated resourceId
+        let resourceName = 'Unknown';
+        let location = '-';
+        let resourceType = 'unknown';
+        
+        if (booking.resourceId) {
+            if (typeof booking.resourceId === 'object' && booking.resourceId._id) {
+                resourceName = booking.resourceId.name || 'Unknown';
+                location = booking.resourceId.location || '-';
+                resourceType = booking.resourceId.type || 'unknown';
+            } else {
+                const resource = allResources.find(r => r._id === booking.resourceId);
+                if (resource) {
+                    resourceName = resource.name;
+                    location = resource.location;
+                    resourceType = resource.type;
+                }
+            }
+        }
+        
+        // Determine actual status
+        const isPast = booking.isPast || isPastBooking(booking.date, booking.slot);
+        let statusBadge;
+        
+        if (booking.status === 'cancelled') {
+            statusBadge = '<span class="badge badge-danger">Cancelled</span>';
+        } else if (isPast) {
+            statusBadge = '<span class="badge badge-secondary">Completed</span>';
+        } else {
+            statusBadge = '<span class="badge badge-success">Active</span>';
+        }
+        
+        // Show cancel button only for active future bookings
+        const canCancel = booking.status === 'active' && !isPast;
+        const cancelBtn = canCancel
+            ? `<button class="btn btn-sm btn-danger" onclick="showCancelModal('${booking._id}', '${resourceName}', '${booking.date}', '${booking.slot}')">
+                <i class="bi bi-x-circle"></i> Cancel
+               </button>`
+            : '<span class="text-muted">-</span>';
+        
+        const row = `
+            <tr ${isPast ? 'style="opacity: 0.6;"' : ''}>
+                <td>
+                    <i class="bi bi-${getResourceIcon(resourceType)}"></i>
+                    <strong>${resourceName}</strong>
+                </td>
+                <td>${location}</td>
+                <td>${formatDate(booking.date)}</td>
+                <td><span class="badge badge-primary">${booking.slot}</span></td>
+                <td>${statusBadge}</td>
+                <td>${formatDateTime(booking.createdAt)}</td>
+                <td>${cancelBtn}</td>
+            </tr>
+        `;
+        
+        tbody.innerHTML += row;
+    });
+}
+
+// Get resource icon
+function getResourceIcon(type) {
+    switch(type) {
+        case 'laundry': return 'droplet-fill';
+        case 'study_room': return 'book-fill';
+        case 'sports': return 'trophy-fill';
+        default: return 'grid-fill';
+    }
+}
+
+// Format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+// Format datetime
+function formatDateTime(dateString) {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleDateString('en-US', options);
+}
+
+// Show cancel modal
+function showCancelModal(bookingId, resourceName, date, slot) {
+    bookingToCancel = bookingId;
+    const detailsDiv = document.getElementById('cancelBookingDetails');
+    detailsDiv.innerHTML = `
+        <div class="alert alert-warning">
+            <strong>Resource:</strong> ${resourceName}<br>
+            <strong>Date:</strong> ${formatDate(date)}<br>
+            <strong>Time:</strong> ${slot}
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('cancelModal'));
+    modal.show();
+}
+
+// Cancel booking
+document.getElementById('confirmCancelBtn').addEventListener('click', async function() {
+    if (!bookingToCancel) return;
+    
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Cancelling...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`/api/bookings/cancel/${bookingToCancel}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Booking cancelled successfully', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('cancelModal')).hide();
+            loadData();
+        } else {
+            showMessage(data.message || 'Failed to cancel booking', 'danger');
+        }
+    } catch (error) {
+        console.error('Cancel error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Yes, Cancel Booking';
+    }
+});
+
+// Filter buttons
+document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        currentFilter = this.value;
+        displayBookings();
+    });
+});
+
+// Search input
+document.getElementById('searchInput').addEventListener('input', function() {
+    searchQuery = this.value;
+    displayBookings();
+});
+
+// Load data on page load
+loadData();
+</script>
+
+<%- include('../partials/footer') %>

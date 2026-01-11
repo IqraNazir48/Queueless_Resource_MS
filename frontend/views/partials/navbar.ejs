@@ -1,0 +1,296 @@
+
+<link rel="stylesheet" href="/css/notifications.css">
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <a class="navbar-brand" href="/">
+            <i class="bi bi-calendar-check"></i>
+            QueueLess
+        </a>
+        
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <% if (!user) { %>
+                    <!-- Guest Navigation -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="bi bi-house-fill"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-primary text-white ms-2" href="/register">
+                            <i class="bi bi-rocket-takeoff"></i> Get Started
+                        </a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <button class="nav-link btn theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                            <i class="bi" id="themeIcon"></i>
+                        </button>
+                    </li>
+                <% } else if (user.role === 'admin') { %>
+                    <!-- Admin Navigation -->
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'admin-dashboard' ? 'active' : '' %>" href="/admin/dashboard">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'admin-resources' ? 'active' : '' %>" href="/admin/resources">
+                            <i class="bi bi-grid"></i> Resources
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'admin-bookings' ? 'active' : '' %>" href="/admin/bookings">
+                            <i class="bi bi-list-check"></i> Bookings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'admin-users' ? 'active' : '' %>" href="/admin/users">
+                            <i class="bi bi-people-fill"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'admin-settings' ? 'active' : '' %>" href="/admin/settings">
+                            <i class="bi bi-gear-fill"></i> Settings
+                        </a>
+                    </li>
+                    
+                    <!-- Notification Bell -->
+                    <li class="nav-item dropdown ms-2">
+                        <a class="nav-link notification-bell" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" onclick="loadNotifications()">
+                            <i class="bi bi-bell-fill"></i>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown">
+                            <div class="notification-header">
+                                <h6><i class="bi bi-bell"></i> Notifications</h6>
+                                <button class="btn btn-sm btn-link text-primary p-0" onclick="markAllAsRead()">Mark all read</button>
+                            </div>
+                            <div class="notification-list" id="notificationsList">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary"></div>
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <a href="/admin/notifications" class="text-decoration-none">
+                                    View all notifications <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    
+                    <li class="nav-item ms-2">
+                        <button class="nav-link btn theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                            <i class="bi" id="themeIcon"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown ms-2">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                            <img id="navProfilePicture" src="/images/default-avatar.png" alt="Profile" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid var(--primary);">
+                            <%= user.name %>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <div class="dropdown-header">
+                                    <strong><%= user.name %></strong>
+                                    <br>
+                                    <small class="text-muted"><%= user.email %></small>
+                                    <br>
+                                    <span class="badge badge-primary mt-2">Admin</span>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/admin/profile">
+                                    <i class="bi bi-person-fill"></i> My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                <% } else { %>
+                    <!-- Resident Navigation -->
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'dashboard' ? 'active' : '' %>" href="/dashboard">
+                            <i class="bi bi-house-fill"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'book-resource' ? 'active' : '' %>" href="/book-resource">
+                            <i class="bi bi-plus-circle"></i> Book
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link <%= typeof page !== 'undefined' && page === 'my-bookings' ? 'active' : '' %>" href="/my-bookings">
+                            <i class="bi bi-calendar-event"></i> My Bookings
+                        </a>
+                    </li>
+                    
+                    <!-- Notification Bell -->
+                    <li class="nav-item dropdown ms-2">
+                        <a class="nav-link notification-bell" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" onclick="loadNotifications()">
+                            <i class="bi bi-bell-fill"></i>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end notification-dropdown">
+                            <div class="notification-header">
+                                <h6><i class="bi bi-bell"></i> Notifications</h6>
+                                <button class="btn btn-sm btn-link text-primary p-0" onclick="markAllAsRead()">Mark all read</button>
+                            </div>
+                            <div class="notification-list" id="notificationsList">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-primary"></div>
+                                </div>
+                            </div>
+                            <div class="notification-footer">
+                                <button onclick="loadNotifications()">Refresh</button>
+                            </div>
+                        </div>
+                    </li>
+                    
+                    <li class="nav-item ms-2">
+                        <button class="nav-link btn theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+                            <i class="bi" id="themeIcon"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown ms-2">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                            <img id="navProfilePicture" src="/images/default-avatar.png" alt="Profile" class="rounded-circle me-2" style="width: 35px; height: 35px; object-fit: cover; border: 2px solid var(--primary);">
+                            <%= user.name %>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <div class="dropdown-header">
+                                    <strong><%= user.name %></strong>
+                                    <br>
+                                    <small class="text-muted"><%= user.email %></small>
+                                    <br>
+                                    <span class="badge badge-success mt-2">Resident</span>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/profile">
+                                    <i class="bi bi-person-fill"></i> My Profile
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="/logout">
+                                    <i class="bi bi-box-arrow-right"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<script src="/js/notifications.js"></script>
+
+<script>
+// Load profile picture from localStorage
+(function() {
+    function updateNavProfilePicture() {
+        const navProfilePic = document.getElementById('navProfilePicture');
+        if (!navProfilePic) return;
+        
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.profilePicture && user.profilePicture !== 'default-avatar.png') {
+                navProfilePic.src = user.profilePicture;
+            } else {
+                navProfilePic.src = '/images/default-avatar.png';
+            }
+        } catch (e) {
+            console.log('Error loading profile picture');
+        }
+    }
+    
+    updateNavProfilePicture();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateNavProfilePicture);
+    }
+})();
+
+// Theme toggle initialization
+(function() {
+    function updateThemeIcon() {
+        const icon = document.getElementById('themeIcon');
+        if (!icon) return;
+        
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        
+        icon.className = 'bi';
+        
+        if (currentTheme === 'dark') {
+            icon.classList.add('bi-sun-fill');
+        } else {
+            icon.classList.add('bi-moon-fill');
+        }
+    }
+    
+    updateThemeIcon();
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateThemeIcon);
+    }
+})();
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const icon = document.getElementById('themeIcon');
+    
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    
+    icon.className = 'bi';
+    if (newTheme === 'dark') {
+        icon.classList.add('bi-sun-fill');
+    } else {
+        icon.classList.add('bi-moon-fill');
+    }
+}
+</script>
+
+<style>
+.navbar-toggler {
+    border: 2px solid var(--border-default);
+    background-color: var(--bg-secondary);
+}
+
+.theme-toggle {
+    border: 1px solid var(--border-default) !important;
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    padding: 0.5rem 0.75rem !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    background-color: var(--bg-tertiary) !important;
+    transform: rotate(180deg);
+}
+
+.theme-toggle i {
+    font-size: 1.1rem;
+}
+</style>

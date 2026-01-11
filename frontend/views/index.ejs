@@ -1,0 +1,441 @@
+<!-- frontend/views/index.ejs -->
+<%- include('partials/header', {title: 'Home'}) %>
+<%- include('partials/navbar', {page: 'home'}) %>
+
+<style>
+/* Floating Animation */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Fade In Up Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Scale In Animation */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Rotate Background */
+@keyframes rotateBackground {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Slide In From Left */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide In From Right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Hero Section Enhancements */
+.hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+    animation: rotateBackground 30s linear infinite;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%);
+    animation: rotateBackground 40s linear infinite reverse;
+}
+
+.hero > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.hero h1 {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.hero p {
+    animation: slideInLeft 1s ease-out;
+}
+
+.hero .btn {
+    animation: scaleIn 1.2s ease-out;
+}
+
+.hero-illustration i {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Card Animations */
+.card {
+    animation: fadeInUp 0.6s ease-out;
+    animation-fill-mode: both;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-10px) scale(1.02);
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+
+/* Stat Icons */
+.stat-icon {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Section Titles */
+section h2 {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Features Icons */
+.stat-icon.primary {
+    animation: float 3s ease-in-out infinite;
+}
+
+.stat-icon.success {
+    animation: float 3.5s ease-in-out infinite;
+}
+
+.stat-icon.warning {
+    animation: float 4s ease-in-out infinite;
+}
+
+/* Button Hover Effects */
+.btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.btn:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+/* Ensure buttons are always enabled */
+.btn:not(:disabled) {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+/* Numbers Animation */
+@keyframes countUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.hero h2, section h2 {
+    animation: countUp 1s ease-out;
+}
+</style>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-7">
+                <h1>Smart Resource Booking Made Simple</h1>
+                <p>Book laundry rooms, study spaces, and sports facilities with ease. No more waiting in queues!</p>
+                <% if (!user) { %>
+                    <div class="d-flex gap-3 flex-wrap">
+                        <a href="/register" class="btn btn-light btn-lg">
+                            <i class="bi bi-rocket-takeoff-fill"></i> Get Started Free
+                        </a>
+                        <a href="/login" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                    </div>
+                <% } else { %>
+                    <a href="<%= user.role === 'admin' ? '/admin/dashboard' : '/dashboard' %>" class="btn btn-light btn-lg">
+                        <i class="bi bi-speedometer2"></i> Go to Dashboard
+                    </a>
+                <% } %>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="hero-illustration text-center">
+                    <i class="bi bi-calendar-check-fill" style="font-size: 15rem; opacity: 0.2; color: white;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3" style="font-size: 2.5rem;">Why Choose QueueLess?</h2>
+                <p class="text-muted" style="font-size: 1.15rem;">Simple, efficient, and reliable resource booking system</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="mb-3">
+                        <div class="stat-icon primary mx-auto" style="width: 90px; height: 90px;">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Lightning Fast</h4>
+                    <p class="text-muted">Book your preferred slot in seconds with our intuitive interface. No complicated forms!</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="mb-3">
+                        <div class="stat-icon success mx-auto" style="width: 90px; height: 90px;">
+                            <i class="bi bi-calendar-check-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Real-time Updates</h4>
+                    <p class="text-muted">See available slots instantly and manage your bookings effortlessly with live updates.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4">
+                    <div class="mb-3">
+                        <div class="stat-icon warning mx-auto" style="width: 90px; height: 90px;">
+                            <i class="bi bi-shield-check-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Secure & Reliable</h4>
+                    <p class="text-muted">Your bookings are safe with our secure authentication and data protection system.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resources Section -->
+<section class="py-5" style="background: white;">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3" style="font-size: 2.5rem;">Available Resources</h2>
+                <p class="text-muted" style="font-size: 1.15rem;">Book from a variety of facilities</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <div class="text-center mb-3">
+                        <div class="stat-icon primary mx-auto" style="width: 100px; height: 100px; font-size: 3rem;">
+                            <i class="bi bi-droplet-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-center fw-bold mb-3">Laundry Facilities</h4>
+                    <p class="text-center text-muted">Modern washing machines and dryers available for booking.</p>
+                    <ul class="list-unstyled text-muted mt-3">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Multiple machines</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Time slot booking</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Smart scheduling</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <div class="text-center mb-3">
+                        <div class="stat-icon success mx-auto" style="width: 100px; height: 100px; font-size: 3rem;">
+                            <i class="bi bi-book-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-center fw-bold mb-3">Study Rooms</h4>
+                    <p class="text-center text-muted">Quiet spaces perfect for studying or group work.</p>
+                    <ul class="list-unstyled text-muted mt-3">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Quiet environment</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Group study support</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Extended hours</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 p-4">
+                    <div class="text-center mb-3">
+                        <div class="stat-icon warning mx-auto" style="width: 100px; height: 100px; font-size: 3rem;">
+                            <i class="bi bi-trophy-fill"></i>
+                        </div>
+                    </div>
+                    <h4 class="text-center fw-bold mb-3">Sports Facilities</h4>
+                    <p class="text-center text-muted">Tennis courts, basketball courts, and more. Stay active!</p>
+                    <ul class="list-unstyled text-muted mt-3">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Multiple courts</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Equipment available</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Peak hour management</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3" style="font-size: 2.5rem;">How It Works</h2>
+                <p class="text-muted" style="font-size: 1.15rem;">Get started in 3 simple steps</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4" style="border: 2px solid #06b6d4;">
+                    <div class="mb-3">
+                        <div class="badge bg-gradient-primary" style="font-size: 2rem; width: 70px; height: 70px; display: inline-flex; align-items: center; justify-content: center; border-radius: 20px;">
+                            1
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Create Account</h4>
+                    <p class="text-muted">Sign up for free in seconds. No credit card required!</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4" style="border: 2px solid #10b981;">
+                    <div class="mb-3">
+                        <div class="badge" style="background: linear-gradient(135deg, #10b981, #059669); font-size: 2rem; width: 70px; height: 70px; display: inline-flex; align-items: center; justify-content: center; border-radius: 20px; color: white;">
+                            2
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Choose Resource</h4>
+                    <p class="text-muted">Select from laundry, study rooms, or sports facilities.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 text-center p-4" style="border: 2px solid #fbbf24;">
+                    <div class="mb-3">
+                        <div class="badge" style="background: linear-gradient(135deg, #fbbf24, #f59e0b); font-size: 2rem; width: 70px; height: 70px; display: inline-flex; align-items: center; justify-content: center; border-radius: 20px; color: white;">
+                            3
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-3">Book Your Slot</h4>
+                    <p class="text-muted">Pick your preferred time slot and confirm instantly!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #0f3557 0%, #0f3557 100%); color: white;">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="fw-bold mb-2" style="font-size: 3.5rem;">24/7</h2>
+                <p class="mb-0" style="font-size: 1.1rem;">Available Anytime</p>
+            </div>
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="fw-bold mb-2" style="font-size: 3.5rem;">100%</h2>
+                <p class="mb-0" style="font-size: 1.1rem;">Secure Bookings</p>
+            </div>
+            <div class="col-md-3 mb-4 mb-md-0">
+                <h2 class="fw-bold mb-2" style="font-size: 3.5rem;"><i class="bi bi-lightning-fill"></i></h2>
+                <p class="mb-0" style="font-size: 1.1rem;">Instant Confirmation</p>
+            </div>
+            <div class="col-md-3">
+                <h2 class="fw-bold mb-2" style="font-size: 3.5rem;"><i class="bi bi-star-fill"></i></h2>
+                <p class="mb-0" style="font-size: 1.1rem;">Easy to Use</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<% if (!user) { %>
+<section class="py-5">
+    <div class="container text-center">
+        <div class="card p-5" style="background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%); border: 2px solid #06b6d4;">
+            <h2 class="fw-bold mb-3" style="font-size: 2.5rem;">Ready to Get Started?</h2>
+            <p class="text-muted mb-4" style="font-size: 1.2rem;">Join QueueLess today and start booking resources hassle-free</p>
+            <div>
+                <a href="/register" class="btn btn-primary btn-lg me-3">
+                    <i class="bi bi-rocket-takeoff-fill"></i> Create Free Account
+                </a>
+                <a href="/login" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<%- include('partials/footer') %>

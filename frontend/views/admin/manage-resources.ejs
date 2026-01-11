@@ -1,0 +1,573 @@
+<!-- frontend/views/admin/manage-resources.ejs - UPDATED WITH DYNAMIC TYPES -->
+<%- include('../partials/header', {title: 'Manage Resources'}) %>
+<%- include('../partials/navbar') %>
+
+<div class="container my-5">
+    <!-- Page Header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+        <div>
+            <h2><i class="bi bi-grid"></i> Manage Resources</h2>
+            <p>Add, edit, and manage all system resources</p>
+        </div>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+            <i class="bi bi-plus-circle"></i> Add Resource
+        </button>
+    </div>
+    
+    <!-- Message Container -->
+    <div id="messageContainer"></div>
+    
+    <!-- Filter Buttons -->
+    <div class="mb-4">
+        <div class="btn-group" role="group" id="filterButtonsContainer">
+            <input type="radio" class="btn-check" name="typeFilter" id="filterAll" value="all" checked>
+            <label class="btn btn-outline-primary" for="filterAll">All Resources</label>
+            
+            <input type="radio" class="btn-check" name="typeFilter" id="filterLaundry" value="laundry">
+            <label class="btn btn-outline-primary" for="filterLaundry">
+                <i class="bi bi-droplet"></i> Laundry
+            </label>
+            
+            <input type="radio" class="btn-check" name="typeFilter" id="filterStudy" value="study_room">
+            <label class="btn btn-outline-primary" for="filterStudy">
+                <i class="bi bi-book"></i> Study Rooms
+            </label>
+            
+            <input type="radio" class="btn-check" name="typeFilter" id="filterSports" value="sports">
+            <label class="btn btn-outline-primary" for="filterSports">
+                <i class="bi bi-trophy"></i> Sports
+            </label>
+        </div>
+    </div>
+    
+    <!-- Resources Grid -->
+    <div id="loadingResources" class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+        <p class="mt-3 text-muted">Loading resources...</p>
+    </div>
+    
+    <div id="resourcesGrid" class="row" style="display: none;">
+        <!-- Populated by JavaScript -->
+    </div>
+    
+    <div id="noResources" class="text-center py-5" style="display: none;">
+        <i class="bi bi-inbox" style="font-size: 4rem; color: var(--gray);"></i>
+        <h4 class="mt-3">No Resources Found</h4>
+        <p class="text-muted">Add your first resource to get started.</p>
+        <button class="btn btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#addResourceModal">
+            <i class="bi bi-plus-circle"></i> Add Resource
+        </button>
+    </div>
+</div>
+
+<!-- Add Resource Modal -->
+<div class="modal fade" id="addResourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addResourceForm">
+                    <div class="mb-3">
+                        <label for="resourceName" class="form-label">Resource Name</label>
+                        <input type="text" class="form-control" id="resourceName" required placeholder="e.g., Washer 1, Study Room A">
+                    </div>
+                    <div class="mb-3">
+                        <label for="resourceType" class="form-label">Type</label>
+                        <select class="form-select" id="resourceType" required>
+                            <option value="">Loading types...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="resourceLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="resourceLocation" required placeholder="e.g., Building A, Floor 1">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveResourceBtn">
+                    <i class="bi bi-check-circle"></i> Add Resource
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Resource Modal -->
+<div class="modal fade" id="editResourceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editResourceForm">
+                    <input type="hidden" id="editResourceId">
+                    <div class="mb-3">
+                        <label for="editResourceName" class="form-label">Resource Name</label>
+                        <input type="text" class="form-control" id="editResourceName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editResourceType" class="form-label">Type</label>
+                        <select class="form-select" id="editResourceType" required>
+                            <option value="">Loading types...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editResourceLocation" class="form-label">Location</label>
+                        <input type="text" class="form-control" id="editResourceLocation" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="updateResourceBtn">
+                    <i class="bi bi-check-circle"></i> Update Resource
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Resource</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this resource?</p>
+                <div id="deleteResourceDetails"></div>
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> This action cannot be undone.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete Resource</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allResources = [];
+let allSettings = null;
+let currentFilter = 'all';
+let resourceToDelete = null;
+
+// Get token
+function getToken() {
+    return localStorage.getItem('token');
+}
+
+// Show message
+function showMessage(message, type = 'info') {
+    const container = document.getElementById('messageContainer');
+    container.innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Load settings first to get resource types
+async function loadSettings() {
+    const token = getToken();
+    try {
+        const response = await fetch('/api/settings', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            allSettings = await response.json();
+            populateResourceTypeDropdowns();
+            populateResourceTypeFilters();
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+// Populate resource type dropdowns dynamically
+function populateResourceTypeDropdowns() {
+    const addResourceTypeSelect = document.getElementById('resourceType');
+    const editResourceTypeSelect = document.getElementById('editResourceType');
+    
+    if (!allSettings || !allSettings.resourceTypes) return;
+    
+    // Clear existing options
+    addResourceTypeSelect.innerHTML = '';
+    editResourceTypeSelect.innerHTML = '';
+    
+    // Add dynamic options from settings
+    allSettings.resourceTypes.forEach(rt => {
+        const option1 = document.createElement('option');
+        option1.value = rt.value;
+        option1.textContent = rt.label;
+        addResourceTypeSelect.appendChild(option1);
+        
+        const option2 = document.createElement('option');
+        option2.value = rt.value;
+        option2.textContent = rt.label;
+        editResourceTypeSelect.appendChild(option2);
+    });
+}
+
+// Populate filter buttons dynamically
+function populateResourceTypeFilters() {
+    const filterContainer = document.getElementById('filterButtonsContainer');
+    if (!filterContainer) return;
+    
+    // Keep "All Resources" button
+    let html = `
+        <input type="radio" class="btn-check" name="typeFilter" id="filterAll" value="all" checked>
+        <label class="btn btn-outline-primary" for="filterAll">All Resources</label>
+    `;
+    
+    // Add dynamic filter buttons
+    if (allSettings && allSettings.resourceTypes) {
+        allSettings.resourceTypes.forEach(rt => {
+            html += `
+                <input type="radio" class="btn-check" name="typeFilter" id="filter${rt.value}" value="${rt.value}">
+                <label class="btn btn-outline-primary" for="filter${rt.value}">
+                    <i class="bi bi-${rt.icon}"></i> ${rt.label}
+                </label>
+            `;
+        });
+    }
+    
+    filterContainer.innerHTML = html;
+    
+    // Re-attach event listeners
+    document.querySelectorAll('input[name="typeFilter"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            currentFilter = this.value;
+            displayResources();
+        });
+    });
+}
+
+// Load resources
+async function loadResources() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/resources', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = '/login';
+            return;
+        }
+        
+        allResources = await response.json();
+        displayResources();
+        
+    } catch (error) {
+        console.error('Error loading resources:', error);
+        showMessage('Error loading resources', 'danger');
+    }
+}
+
+// Display resources
+function displayResources() {
+    const loadingDiv = document.getElementById('loadingResources');
+    const gridDiv = document.getElementById('resourcesGrid');
+    const noResourcesDiv = document.getElementById('noResources');
+    
+    loadingDiv.style.display = 'none';
+    
+    // Filter resources
+    let filteredResources = allResources;
+    if (currentFilter !== 'all') {
+        filteredResources = allResources.filter(r => r.type === currentFilter);
+    }
+    
+    if (filteredResources.length === 0) {
+        noResourcesDiv.style.display = 'block';
+        gridDiv.style.display = 'none';
+        return;
+    }
+    
+    noResourcesDiv.style.display = 'none';
+    gridDiv.style.display = 'flex';
+    gridDiv.innerHTML = '';
+    
+    filteredResources.forEach(resource => {
+        const statusBadge = getStatusBadge(resource.status);
+        const typeIcon = getResourceIcon(resource.type);
+        const typeName = getTypeName(resource.type);
+        
+        const card = `
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <i class="bi bi-${typeIcon} fs-3 text-primary"></i>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        <h5 class="card-title">${resource.name}</h5>
+                        <p class="text-muted mb-1"><i class="bi bi-tag"></i> ${typeName}</p>
+                        <p class="text-muted mb-3"><i class="bi bi-geo-alt"></i> ${resource.location}</p>
+                        
+                        <div class="btn-group w-100" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick='editResource(${JSON.stringify(resource)})'>
+                                <i class="bi bi-pencil"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                Status
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('${resource._id}', 'available')">
+                                    <i class="bi bi-check-circle text-success"></i> Available
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('${resource._id}', 'in-use')">
+                                    <i class="bi bi-clock text-warning"></i> In Use
+                                </a></li>
+                                <li><a class="dropdown-item" href="#" onclick="updateStatus('${resource._id}', 'out-of-service')">
+                                    <i class="bi bi-x-circle text-danger"></i> Out of Service
+                                </a></li>
+                            </ul>
+                            <button class="btn btn-sm btn-outline-danger" onclick='showDeleteModal(${JSON.stringify(resource)})'>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        gridDiv.innerHTML += card;
+    });
+}
+
+// Helper functions
+function getResourceIcon(type) {
+    if (!allSettings || !allSettings.resourceTypes) {
+        return 'grid';
+    }
+    
+    const resourceType = allSettings.resourceTypes.find(rt => rt.value === type);
+    return resourceType ? resourceType.icon : 'grid';
+}
+
+function getTypeName(type) {
+    if (!allSettings || !allSettings.resourceTypes) {
+        return type;
+    }
+    
+    const resourceType = allSettings.resourceTypes.find(rt => rt.value === type);
+    return resourceType ? resourceType.label : type;
+}
+
+function getStatusBadge(status) {
+    switch(status) {
+        case 'available':
+            return '<span class="badge badge-success">Available</span>';
+        case 'in-use':
+            return '<span class="badge badge-warning">In Use</span>';
+        case 'out-of-service':
+            return '<span class="badge badge-danger">Out of Service</span>';
+        default:
+            return '<span class="badge badge-secondary">' + status + '</span>';
+    }
+}
+
+// Add resource
+document.getElementById('saveResourceBtn').addEventListener('click', async function() {
+    const name = document.getElementById('resourceName').value;
+    const type = document.getElementById('resourceType').value;
+    const location = document.getElementById('resourceLocation').value;
+    
+    if (!name || !type || !location) {
+        showMessage('Please fill all fields', 'warning');
+        return;
+    }
+    
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch('/api/resources', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, type, location })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Resource added successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('addResourceModal')).hide();
+            document.getElementById('addResourceForm').reset();
+            loadResources();
+        } else {
+            showMessage(data.message || 'Failed to add resource', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> Add Resource';
+    }
+});
+
+// Edit resource
+function editResource(resource) {
+    document.getElementById('editResourceId').value = resource._id;
+    document.getElementById('editResourceName').value = resource.name;
+    document.getElementById('editResourceType').value = resource.type;
+    document.getElementById('editResourceLocation').value = resource.location;
+    
+    const modal = new bootstrap.Modal(document.getElementById('editResourceModal'));
+    modal.show();
+}
+
+// Update resource
+document.getElementById('updateResourceBtn').addEventListener('click', async function() {
+    const id = document.getElementById('editResourceId').value;
+    const name = document.getElementById('editResourceName').value;
+    const type = document.getElementById('editResourceType').value;
+    const location = document.getElementById('editResourceLocation').value;
+    
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`/api/resources/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, type, location })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Resource updated successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('editResourceModal')).hide();
+            loadResources();
+        } else {
+            showMessage(data.message || 'Failed to update resource', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> Update Resource';
+    }
+});
+
+// Update status
+async function updateStatus(id, status) {
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`/api/resources/status/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ status })
+        });
+        
+        if (response.ok) {
+            showMessage('Status updated successfully!', 'success');
+            loadResources();
+        } else {
+            const data = await response.json();
+            showMessage(data.message || 'Failed to update status', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    }
+}
+
+// Show delete modal
+function showDeleteModal(resource) {
+    resourceToDelete = resource._id;
+    document.getElementById('deleteResourceDetails').innerHTML = `
+        <div class="alert alert-info">
+            <strong>${resource.name}</strong><br>
+            <small>Type: ${getTypeName(resource.type)} | Location: ${resource.location}</small>
+        </div>
+    `;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Delete resource
+document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if (!resourceToDelete) return;
+    
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...';
+    
+    const token = getToken();
+    
+    try {
+        const response = await fetch(`/api/resources/${resourceToDelete}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Resource deleted successfully!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            loadResources();
+        } else {
+            showMessage(data.message || 'Failed to delete resource', 'danger');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showMessage('Network error. Please try again.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Delete Resource';
+    }
+});
+
+// Initialize: Load settings first, then resources
+loadSettings().then(() => loadResources());
+</script>
+
+<%- include('../partials/footer') %>

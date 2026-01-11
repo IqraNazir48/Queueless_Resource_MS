@@ -1,0 +1,630 @@
+
+
+/* ===== EXTRA LARGE SCREENS (1400px+) ===== */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1320px;
+    }
+}
+
+/* ===== LARGE SCREENS (992px - 1399px) ===== */
+@media (max-width: 1399px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+/* ===== MEDIUM SCREENS / TABLETS (768px - 991px) ===== */
+@media (max-width: 991px) {
+    /* Navbar adjustments */
+    .navbar-brand {
+        font-size: 1.5rem;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0;
+    }
+    
+    .navbar-collapse {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-default);
+    }
+    
+    /* Profile dropdown in collapsed menu */
+    .navbar-nav .dropdown-menu {
+        position: static !important;
+        transform: none !important;
+        border: none;
+        box-shadow: none;
+        background-color: var(--bg-secondary);
+        margin-top: 0.5rem;
+    }
+    
+    /* Page headers */
+    .page-header h2 {
+        font-size: 1.75rem;
+    }
+    
+    .page-header p {
+        font-size: 0.95rem;
+    }
+    
+    /* Hero section */
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .hero p {
+        font-size: 1.1rem;
+    }
+    
+    /* Stat cards - 2 columns */
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.75rem;
+    }
+    
+    /* Tables */
+    .table {
+        font-size: 0.9rem;
+    }
+    
+    .table thead th {
+        padding: 0.75rem;
+        font-size: 0.7rem;
+    }
+    
+    .table tbody td {
+        padding: 0.75rem;
+    }
+    
+    /* Cards */
+    .card-body {
+        padding: 1.25rem;
+    }
+    
+    /* Buttons */
+    .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    /* Welcome banner */
+    .welcome-banner .card-body,
+    .admin-welcome-banner .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .profile-pic-large {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .welcome-title,
+    .admin-welcome-title {
+        font-size: 1.5rem;
+    }
+    
+    .welcome-subtitle,
+    .admin-welcome-subtitle {
+        font-size: 0.95rem;
+    }
+}
+
+/* ===== SMALL SCREENS / MOBILE (576px - 767px) ===== */
+@media (max-width: 767px) {
+    /* Container padding */
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    /* Navbar */
+    .navbar {
+        padding: 0.75rem 0;
+    }
+    
+    .navbar-brand {
+        font-size: 1.3rem;
+    }
+    
+    .navbar-brand i {
+        font-size: 1.2rem;
+    }
+    
+    /* Theme toggle button */
+    .theme-toggle {
+        padding: 0.4rem 0.6rem !important;
+        font-size: 0.9rem;
+    }
+    
+    /* Notification bell */
+    .notification-bell {
+        font-size: 1.1rem;
+    }
+    
+    .notification-badge {
+        top: -5px;
+        right: -5px;
+        font-size: 0.6rem;
+        padding: 1px 4px;
+        min-width: 16px;
+    }
+    
+    /* Page headers */
+    .page-header {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.5rem;
+    }
+    
+    .page-header p {
+        font-size: 0.9rem;
+    }
+    
+    /* Hero section */
+    .hero {
+        padding: 3rem 0;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero p {
+        font-size: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .hero .btn {
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .hero .d-flex {
+        flex-direction: column;
+    }
+    
+    /* Welcome banner */
+    .welcome-banner .row,
+    .admin-welcome-banner .row {
+        text-align: center;
+    }
+    
+    .welcome-banner .col-auto,
+    .admin-welcome-banner .col-auto {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-pic-large {
+        width: 70px;
+        height: 70px;
+        border-width: 3px;
+    }
+    
+    .welcome-title,
+    .admin-welcome-title {
+        font-size: 1.3rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-subtitle,
+    .admin-welcome-subtitle {
+        font-size: 0.9rem;
+    }
+    
+    .welcome-banner .btn-light,
+    .admin-welcome-banner .btn-light {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    
+    /* Stat cards - Full width on mobile */
+    .stat-card {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 1.3rem;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.5rem;
+    }
+    
+    .stat-content p {
+        font-size: 0.85rem;
+    }
+    
+    /* Cards */
+    .card {
+        margin-bottom: 1.5rem;
+    }
+    
+    .card-header {
+        padding: 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    /* Tables - Horizontal scroll */
+    .table-responsive {
+        margin-bottom: 1rem;
+        border-radius: 8px;
+    }
+    
+    .table {
+        font-size: 0.85rem;
+        min-width: 600px;
+    }
+    
+    .table thead th {
+        padding: 0.6rem;
+        font-size: 0.65rem;
+        white-space: nowrap;
+    }
+    
+    .table tbody td {
+        padding: 0.6rem;
+    }
+    
+    /* Badges */
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+    }
+    
+    /* Buttons */
+    .btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .btn-lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Button groups */
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+        border-radius: 8px !important;
+    }
+    
+    .btn-group input[type="radio"] + label {
+        width: 100%;
+    }
+    
+    /* Forms */
+    .form-control,
+    .form-select {
+        font-size: 0.9rem;
+        padding: 0.65rem 0.85rem;
+    }
+    
+    .form-label {
+        font-size: 0.9rem;
+        margin-bottom: 0.4rem;
+    }
+    
+    /* Modals */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-content {
+        border-radius: 10px;
+    }
+    
+    .modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-body {
+        padding: 1rem;
+    }
+    
+    .modal-footer {
+        padding: 1rem;
+        flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+    
+    /* Alerts */
+    .alert {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    /* Notification dropdown */
+    .notification-dropdown {
+        min-width: 300px;
+        max-width: 90vw;
+    }
+    
+    .notification-item {
+        padding: 0.75rem;
+    }
+    
+    .notification-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+    }
+    
+    /* Slot grid */
+    .slot-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .slot-btn {
+        padding: 0.85rem;
+        font-size: 0.85rem;
+    }
+    
+    /* Footer */
+    footer {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    footer .row {
+        text-align: center;
+    }
+    
+    footer .col-md-6 {
+        margin-bottom: 1rem;
+    }
+    
+    footer h5 {
+        font-size: 1.1rem;
+    }
+    
+    footer p {
+        font-size: 0.85rem;
+    }
+    
+    /* Quick Actions */
+    .card .row.g-3 .col-md-4 {
+        margin-bottom: 0.75rem;
+    }
+    
+    .card .btn-lg span {
+        font-size: 0.9rem;
+    }
+    
+    /* Dropdown menus */
+    .dropdown-menu {
+        min-width: 250px;
+    }
+    
+    /* Profile image in navbar */
+    #navProfilePicture {
+        width: 30px !important;
+        height: 30px !important;
+    }
+}
+
+/* ===== EXTRA SMALL SCREENS (< 576px) ===== */
+@media (max-width: 575px) {
+    /* Even smaller adjustments */
+    .container {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .page-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .hero h1 {
+        font-size: 1.75rem;
+    }
+    
+    .hero p {
+        font-size: 0.95rem;
+    }
+    
+    .profile-pic-large {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .welcome-title,
+    .admin-welcome-title {
+        font-size: 1.1rem;
+    }
+    
+    .welcome-subtitle,
+    .admin-welcome-subtitle {
+        font-size: 0.85rem;
+    }
+    
+    .stat-content h3 {
+        font-size: 1.3rem;
+    }
+    
+    .card-header {
+        font-size: 0.9rem;
+    }
+    
+    .table {
+        font-size: 0.8rem;
+    }
+    
+    .notification-dropdown {
+        min-width: 280px;
+    }
+    
+    .slot-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .slot-btn {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+}
+
+/* ===== LANDSCAPE ORIENTATION (Mobile Horizontal) ===== */
+@media (max-width: 767px) and (orientation: landscape) {
+    .hero {
+        padding: 2rem 0;
+    }
+    
+    .welcome-banner .card-body,
+    .admin-welcome-banner .card-body {
+        padding: 1rem !important;
+    }
+    
+    .profile-pic-large {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .modal-dialog {
+        max-width: 90vw;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .navbar,
+    .theme-toggle,
+    .notification-bell,
+    footer,
+    .btn,
+    .page-header,
+    .modal {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .card {
+        border: 1px solid #000;
+        box-shadow: none;
+        page-break-inside: avoid;
+    }
+    
+    .table {
+        border: 1px solid #000;
+    }
+    
+    body {
+        background: white;
+        color: black;
+    }
+}
+
+/* ===== TOUCH DEVICE OPTIMIZATIONS ===== */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets */
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1.25rem;
+    }
+    
+    .nav-link {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-control,
+    .form-select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    .slot-btn {
+        min-height: 44px;
+    }
+    
+    /* Remove hover effects on touch devices */
+    .card:hover,
+    .stat-card:hover,
+    .btn:hover {
+        transform: none;
+    }
+}
+
+/* ===== ACCESSIBILITY - REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ===== HIGH CONTRAST MODE ===== */
+@media (prefers-contrast: high) {
+    .card,
+    .btn,
+    .form-control,
+    .table {
+        border-width: 3px;
+    }
+    
+    .btn {
+        font-weight: 700;
+    }
+}
+
+/* ===== DARK MODE PREFERENCE ===== */
+@media (prefers-color-scheme: dark) {
+    /* Respect system dark mode preference if theme not manually set */
+    :root:not([data-theme]) {
+        color-scheme: dark;
+    }
+}

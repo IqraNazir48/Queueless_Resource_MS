@@ -1,0 +1,746 @@
+
+[data-theme="dark"] {
+    /* Primary Colors - More sophisticated blues */
+    --primary: #70b5f9;
+    --primary-dark: #4a9eff;
+    --primary-light: #96ccff;
+    --success: #57b660;
+    --danger: #f05c5c;
+    --warning: #f5c542;
+    
+    /* Background Colors - True dark theme with depth */
+    --bg-body: #000000;
+    --bg-canvas: #0a0a0a;
+    --bg-elevated: #1b1b1b;
+    --bg-secondary: #262626;
+    --bg-tertiary: #333333;
+    
+    /* Text Colors - Better contrast and readability */
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-muted: #888888;
+    --text-disabled: #666666;
+    
+    /* Border Colors - Subtle but visible */
+    --border-default: #2d2d2d;
+    --border-muted: #1f1f1f;
+    
+    /* Shadows - Deeper for dark theme */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+/* ===== GLOBAL DARK THEME ADJUSTMENTS ===== */
+[data-theme="dark"] body {
+    background-color: var(--bg-canvas);
+    color: var(--text-primary);
+}
+
+/* ===== NAVBAR ===== */
+[data-theme="dark"] .navbar {
+    background-color: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-default);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .navbar-brand {
+    color: var(--primary);
+}
+
+[data-theme="dark"] .navbar-nav .nav-link {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .navbar-nav .nav-link:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .navbar-nav .nav-link.active {
+    color: white !important;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+}
+
+[data-theme="dark"] .navbar-toggler {
+    border-color: var(--border-default);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .navbar-toggler-icon {
+    filter: invert(1);
+}
+
+[data-theme="dark"] .profile-avatar {
+    color: var(--primary);
+}
+
+[data-theme="dark"] .theme-toggle {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-default) !important;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    background-color: var(--bg-tertiary) !important;
+}
+
+/* ===== CARDS ===== */
+[data-theme="dark"] .card {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-muted);
+}
+
+[data-theme="dark"] .card-header {
+    background: linear-gradient(135deg, #1a4d7a 0%, #0f3557 100%);
+    color: white !important;
+    border-bottom: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] .card-body {
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+/* ===== BUTTONS ===== */
+[data-theme="dark"] .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border: none;
+    color: #000000 !important;
+    font-weight: 600;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(112, 181, 249, 0.4);
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-success {
+    background-color: var(--success);
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-success:hover {
+    background-color: #69c772;
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-danger {
+    background-color: var(--danger);
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-danger:hover {
+    background-color: #f27272;
+    color: white !important;
+}
+
+[data-theme="dark"] .btn-outline-primary {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    background-color: transparent;
+}
+
+[data-theme="dark"] .btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+    border: 2px solid var(--border-default);
+    color: var(--text-secondary);
+    background-color: transparent;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border-color: var(--border-default);
+}
+
+[data-theme="dark"] .btn-light {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] .btn-light:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .btn-check:checked + .btn-outline-primary {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #000000 !important;
+}
+
+/* ===== FORMS ===== */
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .form-control:focus,
+[data-theme="dark"] .form-select:focus {
+    background-color: var(--bg-secondary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 3px rgba(112, 181, 249, 0.2);
+}
+
+[data-theme="dark"] .form-control::placeholder {
+    color: var(--text-disabled);
+}
+
+[data-theme="dark"] .form-label {
+    color: var(--text-primary);
+}
+
+/* ===== TABLES ===== */
+[data-theme="dark"] .table {
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
+    border-color: var(--border-default);
+}
+
+[data-theme="dark"] .table thead th {
+    background-color: var(--bg-secondary);
+    color: var(--text-secondary) !important;
+    border-color: var(--border-default) !important;
+}
+
+[data-theme="dark"] .table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-default) !important;
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] .table-responsive {
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .table td strong,
+[data-theme="dark"] .table td i,
+[data-theme="dark"] .table td small {
+    color: var(--text-primary) !important;
+}
+
+/* ===== BADGES ===== */
+[data-theme="dark"] .badge-primary {
+    background-color: rgba(112, 181, 249, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(112, 181, 249, 0.3);
+}
+
+[data-theme="dark"] .badge-success {
+    background-color: rgba(87, 182, 96, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(87, 182, 96, 0.3);
+}
+
+[data-theme="dark"] .badge-danger {
+    background-color: rgba(240, 92, 92, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(240, 92, 92, 0.3);
+}
+
+[data-theme="dark"] .badge-warning {
+    background-color: rgba(245, 197, 66, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(245, 197, 66, 0.3);
+}
+
+[data-theme="dark"] .badge-secondary {
+    background-color: rgba(179, 179, 179, 0.15);
+    color: var(--text-secondary);
+    border: 1px solid rgba(179, 179, 179, 0.3);
+}
+
+/* ===== ALERTS ===== */
+[data-theme="dark"] .alert {
+    border-radius: 8px;
+    border-width: 1px;
+}
+
+[data-theme="dark"] .alert-success {
+    background-color: rgba(87, 182, 96, 0.1);
+    color: var(--success);
+    border-color: rgba(87, 182, 96, 0.3);
+}
+
+[data-theme="dark"] .alert-danger {
+    background-color: rgba(240, 92, 92, 0.1);
+    color: var(--danger);
+    border-color: rgba(240, 92, 92, 0.3);
+}
+
+[data-theme="dark"] .alert-warning {
+    background-color: rgba(245, 197, 66, 0.1);
+    color: var(--warning);
+    border-color: rgba(245, 197, 66, 0.3);
+}
+
+[data-theme="dark"] .alert-info {
+    background-color: rgba(112, 181, 249, 0.1);
+    color: var(--primary);
+    border-color: rgba(112, 181, 249, 0.3);
+}
+
+/* ===== STAT CARDS ===== */
+[data-theme="dark"] .stat-card {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+}
+
+[data-theme="dark"] .stat-icon.primary {
+    background-color: rgba(112, 181, 249, 0.15);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .stat-icon.success {
+    background-color: rgba(87, 182, 96, 0.15);
+    color: var(--success);
+}
+
+[data-theme="dark"] .stat-icon.warning {
+    background-color: rgba(245, 197, 66, 0.15);
+    color: var(--warning);
+}
+
+[data-theme="dark"] .stat-content h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .stat-content p {
+    color: var(--text-secondary);
+}
+
+/* ===== SLOT GRID ===== */
+[data-theme="dark"] .slot-btn {
+    border: 2px solid var(--border-default);
+    background-color: var(--bg-elevated);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .slot-btn:hover:not(.disabled) {
+    border-color: var(--primary);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .slot-btn.selected {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #000000 !important;
+}
+
+[data-theme="dark"] .slot-btn.disabled {
+    opacity: 0.3;
+    background-color: var(--bg-canvas);
+}
+
+/* ===== PAGE HEADER ===== */
+[data-theme="dark"] .page-header {
+    border-bottom: 2px solid var(--border-default);
+}
+
+[data-theme="dark"] .page-header h2 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .page-header p {
+    color: var(--text-secondary);
+}
+
+/* ===== MODALS ===== */
+[data-theme="dark"] .modal-content {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom: 1px solid var(--border-default);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .modal-title {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .modal-body {
+    color: var(--text-primary);
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .modal-footer {
+    border-top: 1px solid var(--border-default);
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* ===== DROPDOWN ===== */
+[data-theme="dark"] .dropdown-menu {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .dropdown-item {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .dropdown-header {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .dropdown-divider {
+    border-color: var(--border-default);
+}
+
+/* ===== FOOTER ===== */
+[data-theme="dark"] footer {
+    background-color: pink;
+    color: white;
+    border-top: 1px solid var(--border-default);
+}
+
+[data-theme="dark"] footer a {
+    color: white;
+}
+
+[data-theme="dark"] footer a:hover {
+    color: white;
+}
+
+[data-theme="dark"] footer h5 {
+    color: white;
+}
+
+/* ===== HERO SECTION ===== */
+[data-theme="dark"] .hero {
+    background: linear-gradient(135deg, #0a2540 0%, #061828 100%);
+}
+
+/* ===== WELCOME BANNER ===== */
+[data-theme="dark"] .card[style*="background: linear-gradient"] {
+    background: linear-gradient(135deg, #1a4d7a 0%, #0f3557 100%) !important;
+}
+
+/* ===== SCROLLBAR ===== */
+[data-theme="dark"]::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+[data-theme="dark"]::-webkit-scrollbar-track {
+    background-color: var(--bg-canvas);
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb {
+    background-color: var(--bg-tertiary);
+    border-radius: 6px;
+    border: 2px solid var(--bg-canvas);
+}
+
+[data-theme="dark"]::-webkit-scrollbar-thumb:hover {
+    background-color: #444444;
+}
+
+/* ===== SECTIONS ===== */
+[data-theme="dark"] section {
+    background-color: var(--bg-canvas);
+}
+
+[data-theme="dark"] section.py-5 {
+    background-color: var(--bg-canvas) !important;
+}
+
+[data-theme="dark"] section[style*="background: white"] {
+    background-color: var(--bg-body) !important;
+}
+
+[data-theme="dark"] .container {
+    background-color: transparent;
+}
+
+/* ===== TEXT UTILITIES ===== */
+[data-theme="dark"] .text-muted {
+    color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] .text-primary {
+    color: var(--primary) !important;
+}
+
+[data-theme="dark"] .text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-danger {
+    color: var(--danger) !important;
+}
+
+[data-theme="dark"] .text-success {
+    color: var(--success) !important;
+}
+
+[data-theme="dark"] .text-warning {
+    color: var(--warning) !important;
+}
+
+/* ===== SPINNER ===== */
+[data-theme="dark"] .spinner-border {
+    border-color: var(--text-disabled);
+    border-right-color: var(--primary);
+}
+
+/* ===== LINKS ===== */
+[data-theme="dark"] a {
+    color: var(--primary);
+}
+
+[data-theme="dark"] a:hover {
+    color: var(--primary-light);
+}
+
+/* ===== HR ===== */
+[data-theme="dark"] hr {
+    border-color: var(--border-default);
+    opacity: 1;
+}
+
+/* ===== BETTER CONTRAST FOR IMPORTANT ELEMENTS ===== */
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] p {
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] small {
+    color: var(--text-secondary);
+}
+
+/* ===== CTA CARDS WITH GRADIENTS ===== */
+[data-theme="dark"] .card[style*="border: 2px solid"] {
+    background: rgba(112, 181, 249, 0.05) !important;
+    border-color: var(--primary) !important;
+}
+
+/* ===== STATS SECTION ===== */
+[data-theme="dark"] section[style*="background: linear-gradient"] {
+    background: linear-gradient(135deg, #0f3557 0%, #1a4d7a 100%) !important;
+}
+
+/* ===== FOCUS STATES ===== */
+[data-theme="dark"] *:focus {
+    outline-color: var(--primary);
+}
+
+/* ===== BETTER ICON VISIBILITY ===== */
+[data-theme="dark"] .bi {
+    color: inherit;
+}
+
+/* ===== LIST GROUP ===== */
+[data-theme="dark"] .list-group-item {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .list-group-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+/* ===== BREADCRUMB ===== */
+[data-theme="dark"] .breadcrumb {
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .breadcrumb-item {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .breadcrumb-item.active {
+    color: var(--text-primary);
+}
+
+/* ===== PAGINATION ===== */
+[data-theme="dark"] .pagination .page-link {
+    background-color: var(--bg-elevated);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+}
+
+[data-theme="dark"] .pagination .page-link:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary);
+}
+
+[data-theme="dark"] .pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: #000000;
+}
+
+/* ===== SMOOTH TRANSITIONS ===== */
+[data-theme="dark"] * {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+
+
+/* ===== DARK MODE - TABLE HEADERS FIX ===== */
+[data-theme="dark"] .table thead th {
+    background: linear-gradient(135deg, #70b5f9 0%, #4a9eff 100%) !important;
+    color: #000000 !important;
+    border-color: var(--border-default) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1rem;
+}
+
+/* Ensure text in table headers is always visible in dark mode */
+[data-theme="dark"] .table th {
+    color: #000000 !important;
+}
+
+/* Table body cells in dark mode */
+[data-theme="dark"] .table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-default) !important;
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Ensure all text elements in tables are visible */
+[data-theme="dark"] .table td strong,
+[data-theme="dark"] .table td i,
+[data-theme="dark"] .table td small {
+    color: var(--text-primary) !important;
+}
+
+/* Table responsive wrapper */
+[data-theme="dark"] .table-responsive {
+    background-color: var(--bg-elevated);
+}
+
+/* ===== COMPLETE DARK MODE FIXES ===== */
+/* Add this section to the END of your dark-theme.css file */
+
+/* ===== FOOTER FIX - REMOVE THE PINK BACKGROUND ===== */
+[data-theme="dark"] footer {
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%) !important;
+    border-top: 3px solid #70b5f9 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] footer a {
+    color: #70b5f9 !important;
+}
+
+[data-theme="dark"] footer a:hover {
+    color: #96ccff !important;
+    text-decoration: underline;
+}
+
+[data-theme="dark"] footer h5 {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] footer p,
+[data-theme="dark"] footer .text-muted {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ===== TABLE HEADERS FIX ===== */
+[data-theme="dark"] .table thead th {
+    background: linear-gradient(135deg, #70b5f9 0%, #4a9eff 100%) !important;
+    color: #000000 !important;
+    border-color: var(--border-default) !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    padding: 1rem;
+}
+
+/* Ensure text in table headers is always visible in dark mode */
+[data-theme="dark"] .table th {
+    color: #000000 !important;
+}
+
+/* Table body cells in dark mode */
+[data-theme="dark"] .table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-default) !important;
+    background-color: var(--bg-elevated);
+}
+
+[data-theme="dark"] .table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+[data-theme="dark"] .table tbody tr:hover td {
+    background-color: var(--bg-secondary) !important;
+}
+
+/* Ensure all text elements in tables are visible */
+[data-theme="dark"] .table td strong,
+[data-theme="dark"] .table td i,
+[data-theme="dark"] .table td small {
+    color: var(--text-primary) !important;
+}
+
+/* Table responsive wrapper */
+[data-theme="dark"] .table-responsive {
+    background-color: var(--bg-elevated);
+}
+
+
