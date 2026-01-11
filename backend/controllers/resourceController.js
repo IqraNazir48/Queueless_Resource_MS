@@ -1,4 +1,4 @@
-// backend/controllers/resourceController.js - UPDATED WITH CORRECT TIME LOGIC
+// backend/controllers/resourceController.js - FINAL FIX WITH TIMEZONE HANDLING
 const Booking = require("../models/Booking");
 const Resource = require("../models/Resource");
 const { getTimeSlotsForType } = require("../utils/slots");
@@ -138,14 +138,17 @@ exports.updateResourceStatus = async (req, res) => {
 exports.getAvailableSlots = async (req, res) => {
     try {
         const { id } = req.params;
-        const { date } = req.query;
+        let { date, timezone } = req.query;
 
         if (!date) return res.status(400).json({ message: "Please provide date as query param, e.g. ?date=2025-01-02" });
 
         const resource = await Resource.findById(id);
         if (!resource) return res.status(404).json({ message: "Resource not found" });
 
-        console.log('Getting slots for resource:', resource.name, 'type:', resource.type, 'date:', date);
+        console.log('==========================================');
+        console.log('Getting slots for resource:', resource.name, 'type:', resource.type);
+        console.log('Requested date:', date);
+        console.log('Client timezone offset:', timezone);
 
         // Get all bookings for this resource on this date
         const bookings = await Booking.find({ 
@@ -161,95 +164,133 @@ exports.getAvailableSlots = async (req, res) => {
         const allSlots = await getTimeSlotsForType(resource.type);
         console.log('All slots for type', resource.type + ':', allSlots);
         
-        // Get current date and time
-        const now = new Date();
-        const todayStr = now.getFullYear() + '-' + 
-                         String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                         String(now.getDate()).padStart(2, '0');
+        // Get current time in UTC
+        const nowUTC = new Date();
+        console.log('Server UTC time:', nowUTC.toISOString());
+        
+        // Calculate user's local time using timezone offset (in minutes)
+        const timezoneOffset = timezone ? parseInt(timezone) : 0;
+        const nowLocal = new Date(nowUTC.getTime() - (timezoneOffset * 60000));
+        
+        // Get today's date in user's local timezone
+        const localYear = nowLocal.getFullYear();
+        const localMonth = String(nowLocal.getMonth() + 1).padStart(2, '0');
+        const localDay = String(nowLocal.getDate()).padStart(2, '0');
+        const todayStr = `${localYear}-${localMonth}-${localDay}`;
+        
+        console.log('User local time:', nowLocal.toISOString());
+        console.log('User local date string:', todayStr);
+        console.log('Requested date:', date);
         
         const isToday = date === todayStr;
+        console.log('Is today?', isToday);
         
         // If it's today, get current time in minutes for comparison
         let currentTimeMinutes = 0;
         if (isToday) {
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
+            const currentHour = nowLocal.getHours();
+            const currentMinute = nowLocal.getMinutes();
             currentTimeMinutes = currentHour * 60 + currentMinute;
-            console.log('Current time:', `${currentHour}:${String(currentMinute).padStart(2, '0')}`, '(', currentTimeMinutes, 'minutes)');
+            console.log('Current local time:', `${currentHour}:${String(currentMinute).padStart(2, '0')}`, '(', currentTimeMinutes, 'minutes)');
         }
         
         // Filter available slots
         const available = allSlots.filter(slot => {
             // Skip if slot is already booked
             if (bookedSlots.includes(slot)) {
-                console.log(`Slot ${slot} is booked`);
+                console.log(`❌ Slot ${slot} is booked`);
                 return false;
             }
             
             // If date is in the future, all slots are available
             if (date > todayStr) {
+                console.log(`✅ Slot ${slot} - future date`);
                 return true;
             }
             
             // If date is in the past, no slots are available
             if (date < todayStr) {
-                console.log(`Date ${date} is in the past`);
+                console.log(`❌ Slot ${slot} - past date`);
                 return false;
             }
             
             // If it's today, check if slot end time hasn't passed yet
             if (isToday) {
-                // Parse slot end time (not start time!)
-                const slotEnd = slot.split('-')[1]; // e.g., "12:00" from "11:00-12:00"
-                
-                // Handle different time formats (with/without AM/PM)
-                let endHour, endMinute;
-                
-                if (slotEnd.includes('AM') || slotEnd.includes('PM')) {
-                    // Format: "12:00PM" or "1:00AM"
-                    const cleanTime = slotEnd.replace(/\s+/g, '');
-                    const isPM = cleanTime.includes('PM');
-                    const timeWithoutPeriod = cleanTime.replace(/AM|PM/g, '');
-                    const [hourStr, minuteStr] = timeWithoutPeriod.split(':');
-                    
-                    endHour = parseInt(hourStr);
-                    endMinute = parseInt(minuteStr);
-                    
-                    // Convert to 24-hour format
-                    if (isPM && endHour !== 12) {
-                        endHour += 12;
-                    } else if (!isPM && endHour === 12) {
-                        endHour = 0;
+                try {
+                    // Parse slot end time
+                    const slotParts = slot.split('-');
+                    if (slotParts.length !== 2) {
+                        console.log(`⚠️ Invalid slot format: ${slot}`);
+                        return false;
                     }
-                } else {
-                    // Format: "12:00" (24-hour format)
-                    [endHour, endMinute] = slotEnd.split(':').map(Number);
-                }
-                
-                const slotEndMinutes = endHour * 60 + endMinute;
-                
-                // Show slot if current time is BEFORE the end time
-                // This means: slot "11:00-12:00" will show if current time is before 12:00
-                if (currentTimeMinutes >= slotEndMinutes) {
-                    console.log(`Slot ${slot} end time (${slotEndMinutes} min) has passed current time (${currentTimeMinutes} min)`);
+                    
+                    const slotEnd = slotParts[1].trim();
+                    
+                    // Handle different time formats
+                    let endHour, endMinute;
+                    
+                    if (slotEnd.includes('AM') || slotEnd.includes('PM')) {
+                        // Format: "12:00PM" or "1:00AM"
+                        const cleanTime = slotEnd.replace(/\s+/g, '');
+                        const isPM = cleanTime.includes('PM');
+                        const timeWithoutPeriod = cleanTime.replace(/AM|PM/gi, '');
+                        const timeParts = timeWithoutPeriod.split(':');
+                        
+                        if (timeParts.length !== 2) {
+                            console.log(`⚠️ Invalid time format: ${slotEnd}`);
+                            return false;
+                        }
+                        
+                        endHour = parseInt(timeParts[0]);
+                        endMinute = parseInt(timeParts[1]);
+                        
+                        // Convert to 24-hour format
+                        if (isPM && endHour !== 12) {
+                            endHour += 12;
+                        } else if (!isPM && endHour === 12) {
+                            endHour = 0;
+                        }
+                    } else {
+                        // Format: "12:00" (24-hour format)
+                        const timeParts = slotEnd.split(':');
+                        if (timeParts.length !== 2) {
+                            console.log(`⚠️ Invalid time format: ${slotEnd}`);
+                            return false;
+                        }
+                        endHour = parseInt(timeParts[0]);
+                        endMinute = parseInt(timeParts[1]);
+                    }
+                    
+                    const slotEndMinutes = endHour * 60 + endMinute;
+                    
+                    // Show slot if current time is BEFORE the end time
+                    if (currentTimeMinutes >= slotEndMinutes) {
+                        console.log(`❌ Slot ${slot} - end time (${endHour}:${String(endMinute).padStart(2, '0')} = ${slotEndMinutes} min) has passed current time (${currentTimeMinutes} min)`);
+                        return false;
+                    }
+                    
+                    console.log(`✅ Slot ${slot} - available (ends at ${endHour}:${String(endMinute).padStart(2, '0')} = ${slotEndMinutes} min, current: ${currentTimeMinutes} min)`);
+                    return true;
+                } catch (error) {
+                    console.error(`Error parsing slot ${slot}:`, error);
                     return false;
                 }
-                
-                console.log(`Slot ${slot} is available - ends at ${slotEndMinutes} min, current time is ${currentTimeMinutes} min`);
-                return true;
             }
             
             return true;
         });
 
         console.log('Final available slots:', available);
+        console.log('==========================================');
 
         res.json({ 
             date, 
             resourceId: id, 
             resourceType: resource.type, 
             availableSlots: available,
-            currentTime: isToday ? now.toISOString() : null
+            serverTime: nowUTC.toISOString(),
+            userLocalTime: nowLocal.toISOString(),
+            isToday: isToday
         });
     } catch (error) {
         console.error('Error in getAvailableSlots:', error);
