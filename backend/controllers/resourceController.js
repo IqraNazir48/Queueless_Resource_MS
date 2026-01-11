@@ -197,20 +197,45 @@ exports.getAvailableSlots = async (req, res) => {
                 return false;
             }
             
-            // If it's today, check if slot start time hasn't passed
+            // If it's today, check if slot end time hasn't passed yet
             if (isToday) {
-                // Parse slot start time
-                const slotStart = slot.split('-')[0]; // e.g., "11:00" from "11:00-12:00"
-                const [startHour, startMinute] = slotStart.split(':').map(Number);
-                const slotStartMinutes = startHour * 60 + startMinute;
+                // Parse slot end time (not start time!)
+                const slotEnd = slot.split('-')[1]; // e.g., "12:00" from "11:00-12:00"
                 
-                // Slot is available if its start time is still in the future
-                if (currentTimeMinutes >= slotStartMinutes) {
-                    console.log(`Slot ${slot} start time (${slotStartMinutes} min) has passed current time (${currentTimeMinutes} min)`);
+                // Handle different time formats (with/without AM/PM)
+                let endHour, endMinute;
+                
+                if (slotEnd.includes('AM') || slotEnd.includes('PM')) {
+                    // Format: "12:00PM" or "1:00AM"
+                    const cleanTime = slotEnd.replace(/\s+/g, '');
+                    const isPM = cleanTime.includes('PM');
+                    const timeWithoutPeriod = cleanTime.replace(/AM|PM/g, '');
+                    const [hourStr, minuteStr] = timeWithoutPeriod.split(':');
+                    
+                    endHour = parseInt(hourStr);
+                    endMinute = parseInt(minuteStr);
+                    
+                    // Convert to 24-hour format
+                    if (isPM && endHour !== 12) {
+                        endHour += 12;
+                    } else if (!isPM && endHour === 12) {
+                        endHour = 0;
+                    }
+                } else {
+                    // Format: "12:00" (24-hour format)
+                    [endHour, endMinute] = slotEnd.split(':').map(Number);
+                }
+                
+                const slotEndMinutes = endHour * 60 + endMinute;
+                
+                // Show slot if current time is BEFORE the end time
+                // This means: slot "11:00-12:00" will show if current time is before 12:00
+                if (currentTimeMinutes >= slotEndMinutes) {
+                    console.log(`Slot ${slot} end time (${slotEndMinutes} min) has passed current time (${currentTimeMinutes} min)`);
                     return false;
                 }
                 
-                console.log(`Slot ${slot} is available - starts at ${slotStartMinutes} min, current time is ${currentTimeMinutes} min`);
+                console.log(`Slot ${slot} is available - ends at ${slotEndMinutes} min, current time is ${currentTimeMinutes} min`);
                 return true;
             }
             
