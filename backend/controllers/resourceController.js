@@ -1,4 +1,4 @@
-// backend/controllers/resourceController.js 
+// backend/controllers/resourceController.js - UPDATED WITH CORRECT TIME LOGIC
 const Booking = require("../models/Booking");
 const Resource = require("../models/Resource");
 const { getTimeSlotsForType } = require("../utils/slots");
@@ -145,8 +145,9 @@ exports.getAvailableSlots = async (req, res) => {
         const resource = await Resource.findById(id);
         if (!resource) return res.status(404).json({ message: "Resource not found" });
 
-        console.log('Getting slots for resource:', resource.name, 'type:', resource.type);
+        console.log('Getting slots for resource:', resource.name, 'type:', resource.type, 'date:', date);
 
+        // Get all bookings for this resource on this date
         const bookings = await Booking.find({ 
             resourceId: id, 
             date, 
@@ -156,37 +157,61 @@ exports.getAvailableSlots = async (req, res) => {
         const bookedSlots = bookings.map(b => b.slot);
         console.log('Booked slots:', bookedSlots);
 
+        // Get all possible slots for this resource type
         const allSlots = await getTimeSlotsForType(resource.type);
-        console.log('Available slots for type', resource.type + ':', allSlots);
+        console.log('All slots for type', resource.type + ':', allSlots);
         
+        // Get current date and time
         const now = new Date();
         const todayStr = now.getFullYear() + '-' + 
                          String(now.getMonth() + 1).padStart(2, '0') + '-' + 
                          String(now.getDate()).padStart(2, '0');
         
+        const isToday = date === todayStr;
+        
+        // If it's today, get current time in minutes for comparison
+        let currentTimeMinutes = 0;
+        if (isToday) {
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+            currentTimeMinutes = currentHour * 60 + currentMinute;
+            console.log('Current time:', `${currentHour}:${String(currentMinute).padStart(2, '0')}`, '(', currentTimeMinutes, 'minutes)');
+        }
+        
+        // Filter available slots
         const available = allSlots.filter(slot => {
+            // Skip if slot is already booked
             if (bookedSlots.includes(slot)) {
+                console.log(`Slot ${slot} is booked`);
                 return false;
             }
             
+            // If date is in the future, all slots are available
             if (date > todayStr) {
                 return true;
             }
             
+            // If date is in the past, no slots are available
             if (date < todayStr) {
+                console.log(`Date ${date} is in the past`);
                 return false;
             }
             
-            if (date === todayStr) {
-                const currentHour = now.getHours();
-                const currentMinute = now.getMinutes();
-                const currentTimeMinutes = currentHour * 60 + currentMinute;
-                
-                const slotStart = slot.split('-')[0];
+            // If it's today, check if slot start time hasn't passed
+            if (isToday) {
+                // Parse slot start time
+                const slotStart = slot.split('-')[0]; // e.g., "11:00" from "11:00-12:00"
                 const [startHour, startMinute] = slotStart.split(':').map(Number);
                 const slotStartMinutes = startHour * 60 + startMinute;
                 
-                return currentTimeMinutes < slotStartMinutes;
+                // Slot is available if its start time is still in the future
+                if (currentTimeMinutes >= slotStartMinutes) {
+                    console.log(`Slot ${slot} start time (${slotStartMinutes} min) has passed current time (${currentTimeMinutes} min)`);
+                    return false;
+                }
+                
+                console.log(`Slot ${slot} is available - starts at ${slotStartMinutes} min, current time is ${currentTimeMinutes} min`);
+                return true;
             }
             
             return true;
@@ -194,7 +219,13 @@ exports.getAvailableSlots = async (req, res) => {
 
         console.log('Final available slots:', available);
 
-        res.json({ date, resourceId: id, resourceType: resource.type, availableSlots: available });
+        res.json({ 
+            date, 
+            resourceId: id, 
+            resourceType: resource.type, 
+            availableSlots: available,
+            currentTime: isToday ? now.toISOString() : null
+        });
     } catch (error) {
         console.error('Error in getAvailableSlots:', error);
         res.status(500).json({ message: "Error fetching available slots", error: error.message });
