@@ -139,6 +139,7 @@ function displayResourceTypes() {
         container.appendChild(col);
     });
     
+    // Add event listeners to new radio buttons
     document.querySelectorAll('input[name="resourceType"]').forEach(radio => {
         radio.addEventListener('change', function() {
             selectedResourceType = this.value;
@@ -210,22 +211,6 @@ document.getElementById('bookingDate').addEventListener('change', function() {
     loadAvailableSlots();
 });
 
-// HELPER to filter past slots
-function isPastSlot(date, slot) {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    if (date > today) return false;
-    if (date < today) return true;
-
-    const slotStart = slot.split('-')[0]; // "HH:MM"
-    const [hour, minute] = slotStart.split(':').map(Number);
-    const slotMinutes = hour * 60 + minute;
-    const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
-    return nowMinutes >= slotMinutes; // true if past
-}
-
 async function loadAvailableSlots() {
     const resourceId = document.getElementById('resourceSelect').value;
     const date = document.getElementById('bookingDate').value;
@@ -252,21 +237,14 @@ async function loadAvailableSlots() {
         });
         
         const data = await response.json();
+        
         loadingSlots.style.display = 'none';
-
+        
         if (data.availableSlots && data.availableSlots.length > 0) {
-            // FILTER OUT PAST SLOTS
-            const validSlots = data.availableSlots.filter(slot => !isPastSlot(date, slot));
-
-            if (validSlots.length === 0) {
-                noSlots.style.display = 'block';
-                return;
-            }
-
             slotsGrid.style.display = 'grid';
             slotsGrid.innerHTML = '';
             
-            validSlots.forEach(slot => {
+            data.availableSlots.forEach(slot => {
                 const slotBtn = document.createElement('button');
                 slotBtn.type = 'button';
                 slotBtn.className = 'slot-btn';
@@ -274,9 +252,13 @@ async function loadAvailableSlots() {
                 slotBtn.dataset.slot = slot;
                 
                 slotBtn.addEventListener('click', function() {
-                    document.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
+                    document.querySelectorAll('.slot-btn').forEach(btn => {
+                        btn.classList.remove('selected');
+                    });
+                    
                     this.classList.add('selected');
                     selectedSlot = this.dataset.slot;
+                    
                     document.getElementById('submitContainer').style.display = 'block';
                 });
                 
